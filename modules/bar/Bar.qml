@@ -26,13 +26,14 @@ Item {
         }
     }
     
+    // Left section - Workspaces and Media Player
     RowLayout {
-        anchors.fill: parent
+        anchors.left: parent.left
         anchors.leftMargin: 12
-        anchors.rightMargin: 12
+        anchors.verticalCenter: parent.verticalCenter
         spacing: 16
         
-        // Left section - Minimal Workspaces
+        // Minimal Workspaces
         Loader {
             Layout.alignment: Qt.AlignVCenter
             source: "components/Workspaces.qml"
@@ -43,7 +44,7 @@ Item {
             }
         }
         
-        // Media Player - Next to workspaces
+        // Media Player
         Loader {
             id: mediaPlayerLoader
             Layout.alignment: Qt.AlignVCenter
@@ -59,16 +60,11 @@ Item {
                 }
             }
         }
-        
-        // Center section - Spacer
-        Item {
-            Layout.fillWidth: true
-        }
-        
-        // Right section - Future: time, system indicators
-        Item {
-            Layout.preferredWidth: 0
-            Layout.fillHeight: true
-        }
+    }
+    
+    // Center section - Clock (absolutely centered)
+    Loader {
+        anchors.centerIn: parent
+        source: "components/Clock.qml"
     }
 }

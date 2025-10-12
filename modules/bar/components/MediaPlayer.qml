@@ -10,10 +10,8 @@ Item {
     property var barWindow  // Reference to parent bar window
     property var popoutWrapper  // Reference to popout wrapper
     
-    width: Math.max(120, root.hasPlayer ? contentRow.implicitWidth : 120)
-    height: Math.max(24, root.hasPlayer ? contentRow.implicitHeight : 24)
-    implicitWidth: width
-    implicitHeight: height
+    implicitWidth: contentRow.implicitWidth
+    implicitHeight: contentRow.implicitHeight
     
     readonly property var player: Players.active
     readonly property bool hasPlayer: player !== null
@@ -39,33 +37,44 @@ Item {
                     model: 3
                     
                     Rectangle {
-                        width: 2
-                        height: root.isPlaying ? (Math.random() * 10 + 6) : 4
-                        radius: 1
+                        width: 3
+                        height: 4
+                        radius: 1.5
                         color: Pywal.colors.color1
-                        opacity: 0.8
+                        opacity: root.isPlaying ? 0.9 : 0.4
                         
-                        Behavior on height {
+                        Behavior on opacity {
                             NumberAnimation {
-                                duration: 180
+                                duration: 300
                                 easing.type: Easing.OutCubic
                             }
                         }
                         
-                        // Continuous animation when playing
+                        // Smooth continuous animation when playing
                         SequentialAnimation on height {
                             running: root.isPlaying
                             loops: Animation.Infinite
                             
+                            // Each bar has different timing for natural wave effect
                             NumberAnimation {
-                                to: Math.random() * 12 + 4
-                                duration: 300 + Math.random() * 200
-                                easing.type: Easing.InOutSine
+                                to: index === 0 ? 14 : (index === 1 ? 16 : 12)
+                                duration: 400 + (index * 50)
+                                easing.type: Easing.InOutQuad
                             }
                             NumberAnimation {
-                                to: Math.random() * 12 + 4
-                                duration: 300 + Math.random() * 200
-                                easing.type: Easing.InOutSine
+                                to: index === 0 ? 6 : (index === 1 ? 8 : 10)
+                                duration: 450 + (index * 50)
+                                easing.type: Easing.InOutQuad
+                            }
+                            NumberAnimation {
+                                to: index === 0 ? 10 : (index === 1 ? 14 : 7)
+                                duration: 420 + (index * 50)
+                                easing.type: Easing.InOutQuad
+                            }
+                            NumberAnimation {
+                                to: 4
+                                duration: 400 + (index * 50)
+                                easing.type: Easing.InOutQuad
                             }
                         }
                     }
@@ -86,7 +95,7 @@ Item {
                 width: parent.width
                 text: root.player?.trackTitle ?? "No media"
                 color: Pywal.foreground
-                font.pixelSize: 13
+                font.pixelSize: 12
                 font.weight: Font.Medium
                 elide: Text.ElideRight
                 opacity: 0.9
@@ -97,7 +106,7 @@ Item {
                 width: parent.width
                 text: root.player?.trackArtist ?? ""
                 color: Pywal.foreground
-                font.pixelSize: 11
+                font.pixelSize: 10
                 elide: Text.ElideRight
                 opacity: 0.6
             }
@@ -142,54 +151,6 @@ Item {
                         root.player.togglePlaying()
                     }
                 }
-            }
-        }
-    }
-    
-    // "No media" placeholder when no player
-    Item {
-        id: noMediaRow
-        anchors.fill: parent
-        visible: !root.hasPlayer
-        z: 0
-        
-        Row {
-            anchors.centerIn: parent
-            spacing: 8
-            
-            // Music note icon
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "♪"
-                color: Pywal.colors.color1
-                font.pixelSize: 18
-                font.weight: Font.Medium
-                
-                SequentialAnimation on opacity {
-                    running: true
-                    loops: Animation.Infinite
-                    
-                    NumberAnimation {
-                        from: 0.7
-                        to: 0.3
-                        duration: 2000
-                        easing.type: Easing.InOutSine
-                    }
-                    NumberAnimation {
-                        from: 0.3
-                        to: 0.7
-                        duration: 2000
-                        easing.type: Easing.InOutSine
-                    }
-                }
-            }
-            
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "No media"
-                color: Pywal.foreground
-                font.pixelSize: 12
-                opacity: 0.5
             }
         }
     }
