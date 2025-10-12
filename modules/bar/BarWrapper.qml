@@ -2,14 +2,16 @@ import Quickshell
 import Quickshell.Wayland
 import QtQuick 6.10
 import "../../config" as QsConfig
-import "components" as BarComponents
 
 Scope {
     readonly property var config: QsConfig.Config
     
-    // Media player popup window
-    BarComponents.MediaPlayerPopupWindow {
-        id: mediaPopup
+    // Media popup window - overlays on top
+    Loader {
+        id: mediaPopupLoader
+        source: "components/MediaPlayerPopupWindow.qml"
+        
+        property var mediaPopup: item
     }
     
     Variants {
@@ -40,7 +42,7 @@ Scope {
                     if (status === Loader.Ready) {
                         item.screen = Qt.binding(() => modelData)
                         item.barWindow = Qt.binding(() => window)
-                        item.mediaPopup = Qt.binding(() => mediaPopup)
+                        item.mediaPopup = Qt.binding(() => mediaPopupLoader.item)
                     }
                 }
             }

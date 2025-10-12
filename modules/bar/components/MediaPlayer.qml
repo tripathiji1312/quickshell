@@ -7,8 +7,8 @@ import "../../../components"
 Item {
     id: root
     
-    property var barWindow  // Reference to parent bar window
-    property var mediaPopup  // Reference to media popup window
+    property var barWindow
+    property var mediaPopup  // Reference to popup window
     
     implicitWidth: contentRow.implicitWidth
     implicitHeight: contentRow.implicitHeight
@@ -16,6 +16,9 @@ Item {
     readonly property var player: Players.active
     readonly property bool hasPlayer: player !== null
     readonly property bool isPlaying: player?.isPlaying ?? false
+    
+    // Hover state
+    property bool isHovered: false
     
     // Main compact content row
     RowLayout {
@@ -155,16 +158,17 @@ Item {
         }
     }
     
-    // Hover area to show popout - place ABOVE content
+    // Hover area to show popout
     MouseArea {
         id: hoverArea
         anchors.fill: parent
         hoverEnabled: true
         propagateComposedEvents: true
         acceptedButtons: Qt.NoButton
-        z: 100  // Make sure it's on top
+        z: 100
         
         onEntered: {
+            root.isHovered = true
             hideTimer.stop()
             if (root.hasPlayer && root.mediaPopup) {
                 showTimer.restart()
@@ -173,11 +177,13 @@ Item {
         }
         
         onExited: {
+            root.isHovered = false
             showTimer.stop()
-            if (root.mediaPopup && root.mediaPopup.shouldShow) {
+            // Only start hide timer if popup is showing
+            if (root.mediaPopup?.shouldShow) {
                 hideTimer.start()
+                console.log("MediaPlayer hover exited, starting hide timer")
             }
-            console.log("MediaPlayer hover exited")
         }
     }
     
@@ -185,19 +191,13 @@ Item {
         id: showTimer
         interval: 400
         onTriggered: {
-            console.log("SHOW TIMER FIRED - hasPlayer:", root.hasPlayer, "mediaPopup:", root.mediaPopup !== null, "barWindow:", root.barWindow !== null)
-            if (root.hasPlayer && root.mediaPopup && root.barWindow) {
-                console.log("Positioning popup...")
-                // Position popup below media player
+            if (root.hasPlayer && root.mediaPopup) {
+                // Get X position for alignment
                 var globalPos = root.mapToItem(null, 0, root.height)
-                console.log("Global position:", globalPos.x, globalPos.y)
-                
-                // Set screen and margins for PanelWindow
-                root.mediaPopup.targetScreen = root.barWindow.screen
                 root.mediaPopup.margins.left = Math.round(globalPos.x)
                 root.mediaPopup.margins.top = Math.round(globalPos.y + 8)
                 root.mediaPopup.shouldShow = true
-                console.log("Popup shouldShow set to true, margins:", root.mediaPopup.margins.left, root.mediaPopup.margins.top)
+                console.log("Showing popup at:", root.mediaPopup.margins.left, root.mediaPopup.margins.top)
             }
         }
     }
@@ -206,9 +206,13 @@ Item {
         id: hideTimer
         interval: 300
         onTriggered: {
-            if (root.mediaPopup && !hoverArea.containsMouse) {
-                console.log("Hide timer triggered")
+            console.log("Hide timer triggered - isHovered:", root.isHovered, "popup.isHovered:", root.mediaPopup?.isHovered)
+            // Check if mouse is over player OR popup before hiding
+            if (root.mediaPopup && !root.isHovered && !root.mediaPopup.isHovered) {
                 root.mediaPopup.shouldShow = false
+                console.log("Hiding popup")
+            } else {
+                console.log("NOT hiding - still hovered")
             }
         }
     }

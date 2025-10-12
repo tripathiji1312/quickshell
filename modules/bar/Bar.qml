@@ -9,8 +9,8 @@ Item {
     id: root
     
     property var screen
-    property var barWindow  // Reference to PanelWindow
-    property var mediaPopup  // Reference to media player popup window
+    property var barWindow
+    property var mediaPopup  // Reference to media popup window
     
     readonly property var config: QsConfig.Config
     readonly property var pywal: QsServices.Pywal

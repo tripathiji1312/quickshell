@@ -1,88 +1,35 @@
-import Quickshell
-import Quickshell.Wayland
 import QtQuick 6.10
 import QtQuick.Layouts 6.10
+import Quickshell
 import qs.services
 
-PanelWindow {
-    id: popupWindow
+Item {
+    id: popout
     
-    property bool shouldShow: false
+    property var wrapperItem
     property bool isHovered: false
+    
+    implicitHeight: contentColumn.implicitHeight + 32
     
     readonly property var player: Players.active
     
-    // Non-animated dimensions
-    readonly property real targetWidth: shouldShow ? 360 : 0
-    readonly property real targetHeight: shouldShow ? (player ? contentColumn.implicitHeight + 32 : 0) : 0
-    
-    visible: shouldShow && player !== null
-    screen: Quickshell.screens[0]  // Use first screen by default
-    
-    anchors {
-        top: true
-        left: true
-    }
-    
-    margins {
-        top: 40  // Bar height + gap
-        left: 0  // Will be set dynamically
-    }
-    
-    implicitWidth: targetWidth
-    implicitHeight: targetHeight
-    
-    color: "transparent"
-    
-    // Smooth animations
-    Behavior on implicitWidth {
-        NumberAnimation {
-            duration: 250
-            easing.type: Easing.OutCubic
-        }
-    }
-    
-    Behavior on implicitHeight {
-        NumberAnimation {
-            duration: 250
-            easing.type: Easing.OutCubic
-        }
-    }
-    
-    // Background with expanding bar design
-    Rectangle {
-        anchors.fill: parent
-        radius: 12
-        color: Pywal.background || "#1e1e2e"
-        opacity: shouldShow ? 0.98 : 0
-        
-        border.width: 1
-        border.color: Pywal.color2 || "#89b4fa"
-        
-        Behavior on opacity {
-            NumberAnimation { duration: 200 }
-        }
-        
-        Behavior on color {
-            ColorAnimation { duration: 200 }
-        }
-    }
-    
-    // Content
     ColumnLayout {
         id: contentColumn
-        anchors.fill: parent
-        anchors.margins: 16
-        spacing: 16
-        visible: player !== null
         
-        // Album art
+        anchors {
+            fill: parent
+            margins: 16
+        }
+        spacing: 16
+        
+        // Album Art
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
             Layout.preferredWidth: 280
             Layout.preferredHeight: 280
-            radius: 12
+            
             color: Pywal.color1 || "#89b4fa"
+            radius: 12
             clip: true
             
             Image {
@@ -90,7 +37,6 @@ PanelWindow {
                 anchors.margins: 2
                 source: player?.trackArtUrl ?? ""
                 fillMode: Image.PreserveAspectCrop
-                asynchronous: true
                 smooth: true
                 visible: player?.trackArtUrl ?? false
             }
@@ -105,39 +51,39 @@ PanelWindow {
             }
         }
         
-        // Track info
+        // Track Info
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 4
             
             Text {
                 Layout.fillWidth: true
-                text: player?.trackTitle ?? "Unknown"
+                text: player?.trackTitle ?? "No track playing"
                 color: Pywal.foreground || "#cdd6f4"
                 font.pixelSize: 16
-                font.weight: Font.Bold
-                elide: Text.ElideRight
+                font.bold: true
                 horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideRight
             }
             
             Text {
                 Layout.fillWidth: true
                 text: player?.trackArtist ?? ""
                 color: Pywal.foreground || "#cdd6f4"
-                font.pixelSize: 13
                 opacity: 0.8
-                elide: Text.ElideRight
+                font.pixelSize: 13
                 horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideRight
             }
             
             Text {
                 Layout.fillWidth: true
                 text: player?.trackAlbum ?? ""
                 color: Pywal.foreground || "#cdd6f4"
-                font.pixelSize: 11
                 opacity: 0.6
-                elide: Text.ElideRight
+                font.pixelSize: 11
                 horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideRight
             }
         }
         
@@ -289,32 +235,6 @@ PanelWindow {
             
             Item { Layout.fillWidth: true }
         }
-    }
-    
-    // Hover area to keep popup open
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        propagateComposedEvents: true
-        z: 50  // Make sure it's above content
-        
-        onEntered: {
-            popupWindow.isHovered = true
-            console.log("Popup hover entered - isHovered:", true)
-        }
-        
-        onExited: {
-            popupWindow.isHovered = false
-            console.log("Popup hover exited - isHovered:", false)
-        }
-    }
-    
-    onShouldShowChanged: {
-        console.log("Popup shouldShow changed to:", shouldShow)
-    }
-    
-    onIsHoveredChanged: {
-        console.log("Popup isHovered changed to:", isHovered)
     }
     
     function formatTime(seconds) {

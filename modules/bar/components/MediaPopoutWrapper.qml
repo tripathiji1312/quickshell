@@ -2,102 +2,92 @@ import QtQuick 6.10
 import qs.services
 
 Item {
-    id: root
+    id: wrapper
     
-    property string currentName: ""
-    property bool hasCurrent: false
+    property bool shouldShow: false
+    property real targetX: 0  // X position to align popup to
     
-    visible: implicitWidth > 0 && implicitHeight > 0
+    // Non-animated dimensions
+    readonly property real nonAnimWidth: shouldShow ? 360 : 0
+    readonly property real nonAnimHeight: shouldShow ? contentLoader.item?.implicitHeight ?? 0 : 0
     
-    implicitWidth: hasCurrent ? contentLoader.implicitWidth + 32 : 0
-    implicitHeight: hasCurrent ? contentLoader.implicitHeight + 32 : 0
+    implicitWidth: nonAnimWidth
+    implicitHeight: nonAnimHeight
     
-    // Add a visible rectangle for debugging
-    Rectangle {
-        anchors.fill: parent
-        color: "transparent"
-        border.width: 2
-        border.color: "red"
-        visible: root.hasCurrent
-    }
+    visible: width > 0 && height > 0
+    clip: true
     
+    // Smooth width/height animations
     Behavior on implicitWidth {
         NumberAnimation {
-            duration: 200
+            duration: 250
             easing.type: Easing.OutCubic
         }
     }
     
     Behavior on implicitHeight {
-        enabled: implicitWidth > 0
         NumberAnimation {
-            duration: 200
+            duration: 250
             easing.type: Easing.OutCubic
         }
     }
     
+    // Animated background
+    Rectangle {
+        anchors.fill: parent
+        anchors.leftMargin: targetX
+        anchors.rightMargin: parent.width - targetX - 360
+        
+        color: Pywal.background || "#1e1e2e"
+        opacity: 0.98
+        radius: 12
+        
+        border.width: 1
+        border.color: Pywal.color2 || "#89b4fa"
+        
+        Behavior on opacity {
+            NumberAnimation { duration: 200 }
+        }
+        
+        Behavior on color {
+            ColorAnimation { duration: 200 }
+        }
+    }
+    
+    // Content loader
     Loader {
         id: contentLoader
-        anchors.centerIn: parent
-        active: root.hasCurrent && root.currentName === "mediaplayer"
-        source: active ? "MediaPlayerPopup.qml" : ""
         
-        opacity: 0
+        anchors.fill: parent
+        anchors.leftMargin: targetX
+        anchors.rightMargin: parent.width - targetX - 360
         
-        onLoaded: {
-            item.player = Qt.binding(() => Players.active)
-            item.shouldBeActive = Qt.binding(() => root.hasCurrent && root.currentName === "mediaplayer")
+        active: wrapper.shouldShow
+        source: "MediaPlayerPopout.qml"
+        
+        onStatusChanged: {
+            if (status === Loader.Ready && item) {
+                item.wrapperItem = Qt.binding(() => wrapper)
+            }
         }
+    }
+    
+    // Hover area to keep popup open
+    MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        propagateComposedEvents: true
         
-        states: State {
-            name: "active"
-            when: contentLoader.active && contentLoader.status === Loader.Ready
-            
-            PropertyChanges {
-                contentLoader.opacity: 1
+        onEntered: {
+            // Keep popup open when hovering over it
+            if (contentLoader.item) {
+                contentLoader.item.isHovered = true
             }
         }
         
-        transitions: [
-            Transition {
-                from: ""
-                to: "active"
-                
-                SequentialAnimation {
-                    NumberAnimation {
-                        property: "opacity"
-                        duration: 200
-                        easing.type: Easing.OutCubic
-                    }
-                }
-            },
-            Transition {
-                from: "active"
-                to: ""
-                
-                SequentialAnimation {
-                    NumberAnimation {
-                        property: "opacity"
-                        duration: 180
-                        easing.type: Easing.InCubic
-                    }
-                }
-            }
-        ]
-        
-        // Keep popout visible when hovering over it
-        MouseArea {
-            anchors.fill: parent
-            hoverEnabled: true
-            propagateComposedEvents: true
-            acceptedButtons: Qt.NoButton
-            
-            onExited: {
-                Qt.callLater(() => {
-                    if (!containsMouse) {
-                        root.hasCurrent = false
-                    }
-                })
+        onExited: {
+            if (contentLoader.item) {
+                contentLoader.item.isHovered = false
             }
         }
     }
