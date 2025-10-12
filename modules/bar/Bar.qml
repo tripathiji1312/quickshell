@@ -13,6 +13,8 @@ Item {
     property var mediaPopup  // Reference to media popup window
     property var bluetoothPopup  // Reference to bluetooth popup window
     property var networkPopup  // Reference to network popup window
+    property var volumePopup  // Reference to volume popup window
+    property var brightnessPopup  // Reference to brightness popup window
     
     readonly property var config: QsConfig.Config
     readonly property var pywal: QsServices.Pywal
@@ -70,12 +72,60 @@ Item {
         source: "components/Clock.qml"
     }
     
-    // Right section - Network, Bluetooth, Battery
+    // Right section - System, Volume, Brightness, Network, Bluetooth, Battery
     RowLayout {
         anchors.right: parent.right
         anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
         spacing: 16
+        
+        // System usage (CPU, Memory, Disk)
+        Loader {
+            Layout.alignment: Qt.AlignVCenter
+            source: "components/SystemUsage.qml"
+        }
+        
+        // Separator
+        Rectangle {
+            width: 1
+            height: 16
+            color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.2)
+        }
+        
+        // Volume module
+        Loader {
+            id: volumeLoader
+            Layout.alignment: Qt.AlignVCenter
+            source: "components/Volume.qml"
+            
+            onStatusChanged: {
+                if (status === Loader.Ready) {
+                    item.barWindow = Qt.binding(() => root.barWindow)
+                    item.volumePopup = Qt.binding(() => root.volumePopup)
+                }
+            }
+        }
+        
+        // Brightness module
+        Loader {
+            id: brightnessLoader
+            Layout.alignment: Qt.AlignVCenter
+            source: "components/Brightness.qml"
+            
+            onStatusChanged: {
+                if (status === Loader.Ready) {
+                    item.barWindow = Qt.binding(() => root.barWindow)
+                    item.brightnessPopup = Qt.binding(() => root.brightnessPopup)
+                }
+            }
+        }
+        
+        // Separator
+        Rectangle {
+            width: 1
+            height: 16
+            color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.2)
+        }
         
         // Network module
         Loader {

@@ -4,3 +4,6 @@ singleton Pywal Pywal.qml
 singleton Players Players.qml
 singleton Time Time.qml
 singleton Network Network.qml
+singleton Brightness Brightness.qml
+singleton Audio Audio.qml
+singleton SystemUsage SystemUsage.qml

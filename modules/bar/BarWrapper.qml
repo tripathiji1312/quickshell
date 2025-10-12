@@ -30,6 +30,22 @@ Scope {
         property var networkPopup: item
     }
     
+    // Volume popup window
+    Loader {
+        id: volumePopupLoader
+        source: "components/VolumePopupWindow.qml"
+        
+        property var volumePopup: item
+    }
+    
+    // Brightness popup window
+    Loader {
+        id: brightnessPopupLoader
+        source: "components/BrightnessPopupWindow.qml"
+        
+        property var brightnessPopup: item
+    }
+    
     Variants {
         model: Quickshell.screens
 
@@ -61,6 +77,8 @@ Scope {
                         item.mediaPopup = Qt.binding(() => mediaPopupLoader.item)
                         item.bluetoothPopup = Qt.binding(() => bluetoothPopupLoader.item)
                         item.networkPopup = Qt.binding(() => networkPopupLoader.item)
+                        item.volumePopup = Qt.binding(() => volumePopupLoader.item)
+                        item.brightnessPopup = Qt.binding(() => brightnessPopupLoader.item)
                     }
                 }
             }
