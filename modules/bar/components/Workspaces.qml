@@ -29,22 +29,21 @@ Item {
             id: workspaceRepeater
             model: root.config.bar.workspaces.count
             
-            Loader {
+            delegate: Loader {
                 required property int index
                 
                 source: "Workspace.qml"
+                asynchronous: false
                 
-                onStatusChanged: {
-                    if (status === Loader.Ready) {
-                        item.workspaceId = Qt.binding(() => index + 1)
-                        item.isActive = Qt.binding(() => root.activeWsId === (index + 1))
-                        item.isOccupied = Qt.binding(() => root.occupied[index + 1] ?? false)
-                        item.clicked.connect(function() {
-                            if (root.hypr.activeWsId !== item.workspaceId) {
-                                root.hypr.dispatch(`workspace ${item.workspaceId}`)
-                            }
-                        })
-                    }
+                onLoaded: {
+                    item.workspaceId = index + 1
+                    item.isActive = Qt.binding(() => root.activeWsId === (index + 1))
+                    item.isOccupied = Qt.binding(() => root.occupied[index + 1] ?? false)
+                    item.clicked.connect(function() {
+                        if (root.hypr.activeWsId !== item.workspaceId) {
+                            root.hypr.dispatch(`workspace ${item.workspaceId}`)
+                        }
+                    })
                 }
             }
         }

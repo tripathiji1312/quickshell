@@ -1,6 +1,7 @@
 import Quickshell
 import QtQuick 6.10
 import QtQuick.Layouts 6.10
+import "components" as BarComponents
 import "../../config" as QsConfig
 import "../../services" as QsServices
 
@@ -8,6 +9,9 @@ Item {
     id: root
     
     property var screen
+    property var barWindow  // Reference to PanelWindow
+    property var popoutWrapper  // Reference to external popout wrapper
+    
     readonly property var config: QsConfig.Config
     readonly property var pywal: QsServices.Pywal
     
@@ -26,17 +30,32 @@ Item {
         anchors.fill: parent
         anchors.leftMargin: 12
         anchors.rightMargin: 12
-        anchors.topMargin: config.bar.padding
-        anchors.bottomMargin: config.bar.padding
         spacing: 16
         
         // Left section - Minimal Workspaces
         Loader {
-            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+            Layout.alignment: Qt.AlignVCenter
             source: "components/Workspaces.qml"
             onStatusChanged: {
                 if (status === Loader.Ready) {
                     item.screen = Qt.binding(() => root.screen)
+                }
+            }
+        }
+        
+        // Media Player - Next to workspaces
+        Loader {
+            id: mediaPlayerLoader
+            Layout.alignment: Qt.AlignVCenter
+            Layout.leftMargin: 8
+            Layout.minimumWidth: 120
+            Layout.preferredWidth: item ? item.implicitWidth : 120
+            source: "components/MediaPlayer.qml"
+            
+            onStatusChanged: {
+                if (status === Loader.Ready) {
+                    item.barWindow = Qt.binding(() => root.barWindow)
+                    item.popoutWrapper = Qt.binding(() => root.popoutWrapper)
                 }
             }
         }

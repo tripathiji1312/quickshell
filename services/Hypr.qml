@@ -33,6 +33,16 @@ Singleton {
         return occupied;
     }
 
+    // Refresh timer to ensure updates when events are missed
+    Timer {
+        interval: 500
+        running: true
+        repeat: true
+        onTriggered: {
+            Hyprland.refreshWorkspaces();
+        }
+    }
+
     Connections {
         target: Hyprland
 
@@ -41,7 +51,8 @@ Singleton {
             if (n.endsWith("v2"))
                 return;
 
-            if (["workspace", "moveworkspace", "activespecial", "focusedmon"].includes(n)) {
+            // More aggressive refresh for workspace changes
+            if (["workspace", "moveworkspace", "activespecial", "focusedmon", "activewindow"].includes(n)) {
                 Hyprland.refreshWorkspaces();
                 Hyprland.refreshMonitors();
             } else if (["openwindow", "closewindow", "movewindow"].includes(n)) {
@@ -51,6 +62,7 @@ Singleton {
                 Hyprland.refreshWorkspaces();
             } else if (n.includes("window")) {
                 Hyprland.refreshToplevels();
+                Hyprland.refreshWorkspaces();
             }
         }
     }
