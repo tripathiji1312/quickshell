@@ -1,0 +1,5 @@
+module qs.config
+singleton Config Config.qml
+singleton Appearance Appearance.qml
+AppearanceConfig 1.0 AppearanceConfig.qml
+BarConfig 1.0 BarConfig.qml

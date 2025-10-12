@@ -1,0 +1,3 @@
+module qs.services
+singleton Hypr Hypr.qml
+singleton Pywal Pywal.qml
