@@ -68,11 +68,11 @@ Item {
         source: "components/Clock.qml"
     }
     
-    // Right section - Power button
+    // Right section - Battery
     Loader {
         anchors.right: parent.right
         anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
-        source: "components/PowerButton.qml"
+        source: "components/Battery.qml"
     }
 }
