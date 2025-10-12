@@ -8,7 +8,7 @@ Item {
     id: root
     
     property var barWindow  // Reference to parent bar window
-    property var popoutWrapper  // Reference to popout wrapper
+    property var mediaPopup  // Reference to media popup window
     
     implicitWidth: contentRow.implicitWidth
     implicitHeight: contentRow.implicitHeight
@@ -165,18 +165,19 @@ Item {
         z: 100  // Make sure it's on top
         
         onEntered: {
-            hideTimer.stop()  // Cancel any pending hide
-            if (root.hasPlayer && root.popoutWrapper) {
-                showTimer.restart()  // Restart to reset the 400ms countdown
+            hideTimer.stop()
+            if (root.hasPlayer && root.mediaPopup) {
+                showTimer.restart()
+                console.log("MediaPlayer hover entered")
             }
         }
         
         onExited: {
-            showTimer.stop()  // Stop show timer if we leave
-            // Only start hide timer if popup is actually showing
-            if (root.popoutWrapper && root.popoutWrapper.hasCurrent) {
+            showTimer.stop()
+            if (root.mediaPopup && root.mediaPopup.shouldShow) {
                 hideTimer.start()
             }
+            console.log("MediaPlayer hover exited")
         }
     }
     
@@ -184,9 +185,19 @@ Item {
         id: showTimer
         interval: 400
         onTriggered: {
-            if (root.hasPlayer && root.popoutWrapper) {
-                root.popoutWrapper.currentName = "mediaplayer"
-                root.popoutWrapper.hasCurrent = true
+            console.log("SHOW TIMER FIRED - hasPlayer:", root.hasPlayer, "mediaPopup:", root.mediaPopup !== null, "barWindow:", root.barWindow !== null)
+            if (root.hasPlayer && root.mediaPopup && root.barWindow) {
+                console.log("Positioning popup...")
+                // Position popup below media player
+                var globalPos = root.mapToItem(null, 0, root.height)
+                console.log("Global position:", globalPos.x, globalPos.y)
+                
+                // Set screen and margins for PanelWindow
+                root.mediaPopup.targetScreen = root.barWindow.screen
+                root.mediaPopup.margins.left = Math.round(globalPos.x)
+                root.mediaPopup.margins.top = Math.round(globalPos.y + 8)
+                root.mediaPopup.shouldShow = true
+                console.log("Popup shouldShow set to true, margins:", root.mediaPopup.margins.left, root.mediaPopup.margins.top)
             }
         }
     }
@@ -195,12 +206,9 @@ Item {
         id: hideTimer
         interval: 300
         onTriggered: {
-            if (root.popoutWrapper) {
-                // Only hide if not hovering anymore
-                if (!hoverArea.containsMouse) {
-                    root.popoutWrapper.hasCurrent = false
-                    root.popoutWrapper.currentName = ""
-                }
+            if (root.mediaPopup && !hoverArea.containsMouse) {
+                console.log("Hide timer triggered")
+                root.mediaPopup.shouldShow = false
             }
         }
     }

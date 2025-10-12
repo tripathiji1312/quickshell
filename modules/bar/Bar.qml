@@ -10,7 +10,7 @@ Item {
     
     property var screen
     property var barWindow  // Reference to PanelWindow
-    property var popoutWrapper  // Reference to external popout wrapper
+    property var mediaPopup  // Reference to media player popup window
     
     readonly property var config: QsConfig.Config
     readonly property var pywal: QsServices.Pywal
@@ -56,7 +56,7 @@ Item {
             onStatusChanged: {
                 if (status === Loader.Ready) {
                     item.barWindow = Qt.binding(() => root.barWindow)
-                    item.popoutWrapper = Qt.binding(() => root.popoutWrapper)
+                    item.mediaPopup = Qt.binding(() => root.mediaPopup)
                 }
             }
         }
@@ -66,5 +66,13 @@ Item {
     Loader {
         anchors.centerIn: parent
         source: "components/Clock.qml"
+    }
+    
+    // Right section - Power button
+    Loader {
+        anchors.right: parent.right
+        anchors.rightMargin: 12
+        anchors.verticalCenter: parent.verticalCenter
+        source: "components/PowerButton.qml"
     }
 }

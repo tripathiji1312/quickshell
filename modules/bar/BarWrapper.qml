@@ -7,6 +7,11 @@ import "components" as BarComponents
 Scope {
     readonly property var config: QsConfig.Config
     
+    // Media player popup window
+    BarComponents.MediaPlayerPopupWindow {
+        id: mediaPopup
+    }
+    
     Variants {
         model: Quickshell.screens
 
@@ -35,20 +40,9 @@ Scope {
                     if (status === Loader.Ready) {
                         item.screen = Qt.binding(() => modelData)
                         item.barWindow = Qt.binding(() => window)
-                        item.popoutWrapper = Qt.binding(() => popoutWrapper)
+                        item.mediaPopup = Qt.binding(() => mediaPopup)
                     }
                 }
-            }
-            
-            // Popout overlay - positioned OVER the bar
-            BarComponents.MediaPopoutWrapper {
-                id: popoutWrapper
-                
-                // Position below the bar, aligned with media player
-                anchors.top: parent.bottom
-                anchors.topMargin: 8
-                anchors.left: parent.left
-                anchors.leftMargin: 12 + 8 + 200  // Left margin + workspaces + spacing
             }
         }
     }
