@@ -7,8 +7,8 @@ import qs.services
 Item {
     id: root
     
-    implicitWidth: 65  // Fixed size
-    implicitHeight: 24  // Fixed size
+    implicitWidth: 70  // Reduced from 85px
+    implicitHeight: 28
     
     readonly property var battery: UPower.displayDevice
     readonly property real percentage: battery?.percentage ?? 0
@@ -17,12 +17,11 @@ Item {
     readonly property bool isLow: batteryLevel <= 25 && !isCharging
     readonly property bool isCritical: batteryLevel <= 15 && !isCharging
     
-    property bool showChargingAnimation: false
+    property bool showPlugAnimation: false
     property bool wasCharging: false
     
     // Minimal color palette
     readonly property color batteryColor: {
-        if (isCharging) return Pywal.color2 || "#a6e3a1"  // Green when charging
         if (isCritical) return "#f38ba8"  // Red critical
         if (isLow) return "#fab387"  // Orange low
         return Pywal.foreground || "#cdd6f4"  // Normal
@@ -34,130 +33,259 @@ Item {
     
     // Watch for charging state changes
     onIsChargingChanged: {
-        console.log("Battery charging state changed:", isCharging, "was:", wasCharging)
         if (isCharging && !wasCharging) {
-            // Just plugged in - show animation
-            console.log("SHOWING CHARGING ANIMATION")
-            showChargingAnimation = true
-            chargingAnimationTimer.restart()
+            // Just plugged in - show plug animation for 3 seconds
+            showPlugAnimation = true
+            plugAnimationTimer.restart()
         }
         wasCharging = isCharging
     }
     
-    // Timer to hide charging animation after 3 seconds
+    // Timer to hide plug animation after 3 seconds
     Timer {
-        id: chargingAnimationTimer
-        interval: 3000
+        id: plugAnimationTimer
+        interval: 3000  // Show plug animation for 3 seconds
         onTriggered: {
-            console.log("Hiding charging animation")
-            showChargingAnimation = false
+            showPlugAnimation = false
         }
     }
     
-    // Charging animation pill - shown when plugged in
-    Item {
-        id: chargingPill
-        visible: showChargingAnimation
-        opacity: showChargingAnimation ? 1 : 0
+    // PLUG-IN ANIMATION - Green liquid filling pill (3 seconds only)
+    Rectangle {
+        id: plugAnimationPill
         anchors.fill: parent
+        radius: 14
+        visible: showPlugAnimation
+        opacity: showPlugAnimation ? 1 : 0
+        color: "#95a3b3"  // Silver-grey pill base
         
         Behavior on opacity {
-            NumberAnimation { duration: 300 }
+            NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
         }
         
-        // Beautiful green pill background
+        // Green liquid filling from 0 to current percentage
         Rectangle {
-            id: pillBackground
-            anchors.fill: parent
-            radius: 12
-            color: Pywal.color2 || "#a6e3a1"
-            opacity: 0.2
+            id: plugLiquidFill
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.margins: 2
+            width: 0
+            radius: parent.radius - 2
+            color: "#a6e3a1"  // Green liquid
             
-            // Animated loading fill
-            Rectangle {
-                id: loadingFill
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 0
-                radius: parent.radius
-                color: Pywal.color2 || "#a6e3a1"
-                opacity: 0.6
-                
-                // Smooth fill animation to current percentage
-                NumberAnimation on width {
-                    running: showChargingAnimation
-                    from: 0
-                    to: pillBackground.width * root.percentage
-                    duration: 2000
-                    easing.type: Easing.OutCubic
-                }
-                
-                // Shimmer effect
-                Rectangle {
-                    width: parent.width
-                    height: parent.height
-                    radius: parent.radius
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.3) }
-                        GradientStop { position: 1.0; color: "transparent" }
-                    }
-                    
-                    // Moving shimmer
-                    SequentialAnimation on x {
-                        running: showChargingAnimation
-                        loops: Animation.Infinite
-                        
-                        NumberAnimation {
-                            from: -parent.width
-                            to: parent.width
-                            duration: 1500
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
-                }
+            // Animate from 0 to current percentage
+            NumberAnimation on width {
+                running: showPlugAnimation
+                from: 0
+                to: (plugAnimationPill.width - 4) * root.percentage
+                duration: 2000
+                easing.type: Easing.OutCubic
             }
             
-            // Percentage text in center - minimal and classy
-            Text {
-                anchors.centerIn: parent
-                text: root.batteryLevel + "%"
-                color: Pywal.color2 || "#a6e3a1"
-                font.pixelSize: 12
-                font.weight: Font.DemiBold
+            // Intense shimmer during plug animation
+            Rectangle {
+                anchors.fill: parent
+                radius: parent.radius
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.4) }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
                 
-                // Subtle pulse effect
-                SequentialAnimation on opacity {
-                    running: showChargingAnimation
+                SequentialAnimation on x {
+                    running: showPlugAnimation
                     loops: Animation.Infinite
                     
                     NumberAnimation {
-                        to: 1.0
-                        duration: 1000
-                        easing.type: Easing.InOutQuad
-                    }
-                    NumberAnimation {
-                        to: 0.7
+                        from: -parent.width
+                        to: parent.width
                         duration: 1000
                         easing.type: Easing.InOutQuad
                     }
                 }
             }
         }
+        
+        // Centered power icon and percentage (black)
+        RowLayout {
+            anchors.centerIn: parent
+            spacing: 5
+            
+            Text {
+                text: "󰚥"
+                font.family: "Material Design Icons"
+                font.pixelSize: 13
+                color: "#000000"
+                opacity: 0.8
+                
+                // Pulse effect during plug animation
+                SequentialAnimation on scale {
+                    running: showPlugAnimation
+                    loops: Animation.Infinite
+                    
+                    NumberAnimation { to: 1.2; duration: 600; easing.type: Easing.OutCubic }
+                    NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InCubic }
+                }
+            }
+            
+            Text {
+                text: root.batteryLevel + "%"
+                color: "#000000"
+                font.pixelSize: 11
+                font.weight: Font.Bold
+                opacity: 0.9
+            }
+        }
     }
     
-    // Normal battery display
-    RowLayout {
-        id: batteryRow
+    // NORMAL CHARGING ANIMATION - Better continuous animation
+    Rectangle {
+        id: chargingPill
         anchors.fill: parent
-        spacing: 6
-        visible: !showChargingAnimation
-        opacity: !showChargingAnimation ? 1 : 0
+        radius: 14
+        visible: isCharging && !showPlugAnimation
+        opacity: (isCharging && !showPlugAnimation) ? 1 : 0
+        color: "#95a3b3"  // Silver-grey pill base
         
         Behavior on opacity {
-            NumberAnimation { duration: 300 }
+            NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
+        }
+        
+        // Green liquid base (current percentage)
+        Rectangle {
+            id: liquidFill
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.margins: 2
+            width: Math.max(0, (parent.width - 4) * root.percentage)
+            radius: parent.radius - 2
+            color: "#a6e3a1"  // Green liquid
+            
+            Behavior on width {
+                NumberAnimation { 
+                    duration: 800
+                    easing.type: Easing.OutCubic
+                }
+            }
+            
+            // Gentle wave/shimmer effect
+            Rectangle {
+                anchors.fill: parent
+                radius: parent.radius
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: "transparent" }
+                    GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.25) }
+                    GradientStop { position: 1.0; color: "transparent" }
+                }
+                
+                SequentialAnimation on x {
+                    running: isCharging && !showPlugAnimation
+                    loops: Animation.Infinite
+                    
+                    NumberAnimation {
+                        from: -parent.width
+                        to: parent.width
+                        duration: 2000
+                        easing.type: Easing.InOutQuad
+                    }
+                    PauseAnimation { duration: 500 }
+                }
+            }
+            
+            // Breathing glow effect on liquid
+            SequentialAnimation on opacity {
+                running: isCharging && !showPlugAnimation
+                loops: Animation.Infinite
+                
+                NumberAnimation { to: 1.0; duration: 1500; easing.type: Easing.InOutQuad }
+                NumberAnimation { to: 0.75; duration: 1500; easing.type: Easing.InOutQuad }
+            }
+        }
+        
+        // Energy particles flowing effect
+        Repeater {
+            model: 3
+            
+            Rectangle {
+                width: 3
+                height: 3
+                radius: 1.5
+                color: Qt.rgba(1, 1, 1, 0.7)
+                x: 0
+                y: chargingPill.height / 2 - 1.5
+                opacity: 0
+                
+                SequentialAnimation on x {
+                    running: isCharging && !showPlugAnimation
+                    loops: Animation.Infinite
+                    
+                    PauseAnimation { duration: index * 400 }
+                    NumberAnimation {
+                        from: 4
+                        to: chargingPill.width - 4
+                        duration: 1800
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+                
+                SequentialAnimation on opacity {
+                    running: isCharging && !showPlugAnimation
+                    loops: Animation.Infinite
+                    
+                    PauseAnimation { duration: index * 400 }
+                    NumberAnimation { to: 0.8; duration: 300 }
+                    NumberAnimation { to: 0.8; duration: 1200 }
+                    NumberAnimation { to: 0.0; duration: 300 }
+                }
+            }
+        }
+        
+        // Centered power icon and percentage (black)
+        RowLayout {
+            anchors.centerIn: parent
+            spacing: 6
+            
+            Text {
+                text: "󰚥"
+                font.family: "Material Design Icons"
+                font.pixelSize: 14
+                color: "#000000"
+                opacity: 0.8
+                
+                // Subtle pulse
+                SequentialAnimation on opacity {
+                    running: isCharging && !showPlugAnimation
+                    loops: Animation.Infinite
+                    
+                    NumberAnimation { to: 0.9; duration: 1500; easing.type: Easing.InOutQuad }
+                    NumberAnimation { to: 0.6; duration: 1500; easing.type: Easing.InOutQuad }
+                }
+            }
+            
+            Text {
+                text: root.batteryLevel + "%"
+                color: "#000000"
+                font.pixelSize: 12
+                font.weight: Font.Bold
+                opacity: 0.9
+            }
+        }
+    }
+    
+    // UNPLUGGED DISPLAY - Minimal, no pill (centered in fixed width)
+    RowLayout {
+        id: batteryRow
+        anchors.centerIn: parent
+        spacing: 6
+        visible: !isCharging
+        opacity: !isCharging ? 1 : 0
+        
+        Behavior on opacity {
+            NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
         }
         
         // Minimal battery icon
@@ -213,74 +341,11 @@ Item {
                     Behavior on color {
                         ColorAnimation { duration: 300 }
                     }
-                    
-                    // Subtle charging pulse on fill
-                    SequentialAnimation on opacity {
-                        running: root.isCharging && !showChargingAnimation
-                        loops: Animation.Infinite
-                        
-                        NumberAnimation {
-                            to: 0.9
-                            duration: 1200
-                            easing.type: Easing.InOutQuad
-                        }
-                        NumberAnimation {
-                            to: 0.6
-                            duration: 1200
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
-                }
-            }
-            
-            // Charging indicator - small circle that moves across battery
-            Rectangle {
-                id: chargingIndicator
-                width: 3
-                height: 3
-                radius: 1.5
-                color: Pywal.color2 || "#a6e3a1"
-                opacity: 0
-                
-                anchors.verticalCenter: batteryBody.verticalCenter
-                x: 2
-                
-                // Slide animation when charging
-                SequentialAnimation on x {
-                    running: root.isCharging && !showChargingAnimation
-                    loops: Animation.Infinite
-                    
-                    NumberAnimation {
-                        to: batteryBody.width - 5
-                        duration: 1500
-                        easing.type: Easing.InOutQuad
-                    }
-                    NumberAnimation {
-                        to: 2
-                        duration: 1500
-                        easing.type: Easing.InOutQuad
-                    }
-                }
-                
-                SequentialAnimation on opacity {
-                    running: root.isCharging && !showChargingAnimation
-                    loops: Animation.Infinite
-                    
-                    NumberAnimation {
-                        to: 0.8
-                        duration: 1500
-                        easing.type: Easing.InOutQuad
-                    }
-                    NumberAnimation {
-                        to: 0.3
-                        duration: 1500
-                        easing.type: Easing.InOutQuad
-                    }
                 }
             }
         }
         
-        // Percentage text - minimal
+        // Percentage text
         Text {
             text: root.batteryLevel + "%"
             color: root.batteryColor
@@ -291,9 +356,9 @@ Item {
                 ColorAnimation { duration: 300 }
             }
             
-            // Subtle pulse on critical
+            // Pulse on critical
             SequentialAnimation on opacity {
-                running: root.isCritical && !root.isCharging
+                running: root.isCritical
                 loops: Animation.Infinite
                 
                 NumberAnimation {
@@ -305,33 +370,6 @@ Item {
                     duration: 800
                 }
             }
-        }
-    }
-    
-    // Minimal background pill (for normal display)
-    Rectangle {
-        anchors.fill: parent
-        anchors.margins: -5
-        radius: 12
-        color: root.batteryColor
-        opacity: showChargingAnimation ? 0 : 0.08
-        z: -1
-        visible: !showChargingAnimation
-        
-        Behavior on color {
-            ColorAnimation { duration: 300 }
-        }
-        
-        Behavior on opacity {
-            NumberAnimation { duration: 300 }
-        }
-        
-        // Subtle border on low battery
-        border.width: root.isLow ? 1 : 0
-        border.color: root.batteryColor
-        
-        Behavior on border.width {
-            NumberAnimation { duration: 200 }
         }
     }
 }

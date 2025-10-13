@@ -10,7 +10,7 @@ PanelWindow {
     property bool shouldShow: false
     readonly property var pywal: QsServices.Pywal
     
-    // Active section: "settings", "performance", "media"
+    // Active section: "settings", "performance", "media", "notifications"
     property string activeSection: "settings"
     
     screen: Quickshell.screens[0]
@@ -250,6 +250,56 @@ PanelWindow {
                             onClicked: root.activeSection = "media"
                         }
                     }
+                    
+                    // Notifications tab
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        radius: 10
+                        color: root.activeSection === "notifications" ? 
+                               Qt.rgba(pywal.color4.r, pywal.color4.g, pywal.color4.b, 0.15) : 
+                               "transparent"
+                        
+                        Behavior on color {
+                            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                        }
+                        
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 2
+                            
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "󰂚"
+                                font.family: "Material Design Icons"
+                                font.pixelSize: 20
+                                color: root.activeSection === "notifications" ? pywal.color4 : pywal.foreground
+                                
+                                Behavior on color {
+                                    ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                }
+                            }
+                            
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "Notifications"
+                                font.family: "Inter"
+                                font.pixelSize: 10
+                                font.weight: Font.Medium
+                                color: root.activeSection === "notifications" ? pywal.color4 : Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.7)
+                                
+                                Behavior on color {
+                                    ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+                                }
+                            }
+                        }
+                        
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.activeSection = "notifications"
+                        }
+                    }
                 }
             }
             
@@ -323,10 +373,35 @@ PanelWindow {
                         if (root.activeSection === "media") return 0
                         if (root.activeSection === "settings") return width
                         if (root.activeSection === "performance") return width
+                        if (root.activeSection === "notifications") return -width
                         return width
                     }
                     
                     opacity: root.activeSection === "media" ? 1 : 0
+                    
+                    Behavior on x {
+                        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+                    }
+                    
+                    Behavior on opacity {
+                        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                    }
+                }
+                
+                // Notifications section
+                Loader {
+                    anchors.fill: parent
+                    active: root.activeSection === "notifications"
+                    visible: opacity > 0
+                    source: "sections/NotificationsSection.qml"
+                    
+                    // Slide from right animation
+                    x: {
+                        if (root.activeSection === "notifications") return 0
+                        return width
+                    }
+                    
+                    opacity: root.activeSection === "notifications" ? 1 : 0
                     
                     Behavior on x {
                         NumberAnimation { duration: 300; easing.type: Easing.OutCubic }

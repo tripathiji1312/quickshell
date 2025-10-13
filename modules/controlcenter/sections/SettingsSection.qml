@@ -518,7 +518,7 @@ Item {
                         Layout.fillWidth: true
                         from: 0
                         to: 150
-                        value: audio.volume * 100  // Convert 0-1.5 to 0-150
+                        value: (audio.volume ?? 0) * 100  // Convert 0-1.5 to 0-150, handle undefined
                         
                         onMoved: audio.setVolume(value / 100)
                         
@@ -551,7 +551,7 @@ Item {
                     }
                     
                     Text {
-                        text: Math.round(audio.volume * 100) + "%"
+                        text: Math.round((audio.volume ?? 0) * 100) + "%"
                         font.family: "Inter"
                         font.pixelSize: 12
                         font.weight: Font.Medium

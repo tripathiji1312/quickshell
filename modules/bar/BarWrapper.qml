@@ -6,13 +6,13 @@ import "../../config" as QsConfig
 Scope {
     readonly property var config: QsConfig.Config
     
-    // Media popup window - overlays on top
-    Loader {
-        id: mediaPopupLoader
-        source: "components/MediaPlayerPopupWindow.qml"
-        
-        property var mediaPopup: item
-    }
+    // Media popup window - DISABLED: Media controls are in Control Center only
+    // Loader {
+    //     id: mediaPopupLoader
+    //     source: "components/MediaPlayerPopupWindow.qml"
+    //     
+    //     property var mediaPopup: item
+    // }
     
     // Bluetooth popup window
     Loader {
@@ -82,7 +82,7 @@ Scope {
                     if (status === Loader.Ready) {
                         item.screen = Qt.binding(() => modelData)
                         item.barWindow = Qt.binding(() => window)
-                        item.mediaPopup = Qt.binding(() => mediaPopupLoader.item)
+                        // item.mediaPopup = Qt.binding(() => mediaPopupLoader.item)  // DISABLED
                         item.bluetoothPopup = Qt.binding(() => bluetoothPopupLoader.item)
                         item.networkPopup = Qt.binding(() => networkPopupLoader.item)
                         item.volumePopup = Qt.binding(() => volumePopupLoader.item)
