@@ -9,6 +9,13 @@ Singleton {
 
     property list<Notif> notifications: []
     readonly property var activeNotifications: notifications.filter(n => !n.closed)
+    
+    // Show all notifications from past 24 hours (including closed ones)
+    readonly property var recentNotifications: notifications.filter(n => {
+        const hoursSinceNotif = (new Date().getTime() - n.timestamp.getTime()) / (1000 * 60 * 60);
+        return hoursSinceNotif < 24;
+    })
+    
     property bool dnd: false
     
     // Add notification from external NotificationServer
@@ -30,6 +37,7 @@ Singleton {
         property var notification
         property date timestamp: new Date()
         property bool closed: false
+        property bool hasAnimated: false  // Track if popup animation has played
         
         // Notification properties
         property string id: ""

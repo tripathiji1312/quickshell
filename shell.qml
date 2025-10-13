@@ -24,6 +24,20 @@ ShellRoot {
         persistenceSupported: true
         
         onNotification: notif => {
+            // Filter out volume/brightness spam notifications
+            const appName = notif.appName.toLowerCase();
+            const summary = notif.summary.toLowerCase();
+            
+            // Skip notifications from volume/brightness tools - we have our own popups
+            if (appName.includes("brightness") || 
+                appName.includes("volume") ||
+                appName.includes("brightnessctl") ||
+                summary.includes("volume") ||
+                summary.includes("brightness")) {
+                console.log("🔇 [Filtered] Skipping OSD notification:", notif.appName, notif.summary);
+                return;
+            }
+            
             console.log("📬 [ShellRoot] Notification received:", notif.summary);
             notif.tracked = true;
             notifs.addNotification(notif);

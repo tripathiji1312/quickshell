@@ -1,18 +1,19 @@
 import QtQuick 6.10
 import QtQuick.Layouts 6.10
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import "../../../services" as QsServices
 
-// Notification popup window that appears in top-right corner
+// Modern minimal notification popup window
 PanelWindow {
     id: root
     
     readonly property var pywal: QsServices.Pywal
     readonly property var notifs: QsServices.Notifs
     
-    // Get popups that should be shown
-    readonly property var activePopups: notifs.activeNotifications.slice(0, 5) // Show max 5
+    // Get popups that should be shown (max 5 at a time, newest first)
+    readonly property var activePopups: notifs.activeNotifications.slice(0, 5)
     
     screen: Quickshell.screens[0]
     
@@ -22,206 +23,352 @@ PanelWindow {
     }
     
     margins {
-        top: 50
-        right: 10
+        top: 8      // Much closer to bar
+        right: 12   // Slightly less margin
     }
     
     visible: activePopups.length > 0
-    
-    onActivePopupsChanged: {
-        console.log("🔔 Notification popups:", activePopups.length, "visible:", visible)
-    }
-    
-    Component.onCompleted: {
-        console.log("🔔 NotificationPopups window initialized")
-    }
     color: "transparent"
     
-    implicitWidth: 400
-    implicitHeight: Math.max(notifColumn.implicitHeight, 100) // Minimum height for visibility
+    implicitWidth: 340   // Reduced from 380
+    implicitHeight: notifColumn.implicitHeight
     
-    // Debug background
-    Rectangle {
-        anchors.fill: parent
-        color: "red"
-        opacity: 0.3
-        visible: root.activePopups.length > 0
+    // Smooth height transition
+    Behavior on implicitHeight {
+        NumberAnimation { 
+            duration: 250
+            easing.type: Easing.OutCubic
+        }
     }
     
     Column {
         id: notifColumn
-        anchors.fill: parent
-        spacing: 8
+        width: parent.width
+        spacing: 6  // Reduced from 12
         
         Repeater {
             model: root.activePopups
             
-            Rectangle {
+            // Modern notification card
+            Item {
                 id: notifCard
                 
                 required property var modelData
                 required property int index
                 
-                width: 400
-                height: contentLayout.height + 20
-                radius: 12
-                color: modelData.urgency === 2 ?
-                       Qt.rgba(pywal?.color1.r ?? 1, pywal?.color1.g ?? 0.5, pywal?.color1.b ?? 0.5, 0.95) :
-                       Qt.rgba(pywal?.background.r ?? 0.1, pywal?.background.g ?? 0.1, pywal?.background.b ?? 0.1, 0.95)
+                width: 340  // Match new width
+                height: cardBg.visible ? cardBg.height : 0
                 
-                border.width: 1
-                border.color: Qt.rgba(pywal?.foreground.r ?? 1, pywal?.foreground.g ?? 1, pywal?.foreground.b ?? 1, 0.2)
+                // Individual visibility for smooth removal
+                property bool isVisible: true
                 
-                // Slide in from right animation
-                x: showAnim.running ? 420 : 0
-                opacity: showAnim.running ? 0 : 1
-                
-                SequentialAnimation {
-                    id: showAnim
-                    running: true
-                    
-                    PauseAnimation { duration: index * 100 }
-                    
-                    ParallelAnimation {
-                        NumberAnimation { target: notifCard; property: "x"; from: 420; to: 0; duration: 300; easing.type: Easing.OutBack }
-                        NumberAnimation { target: notifCard; property: "opacity"; from: 0; to: 1; duration: 300 }
+                // Only animate if not already animated (prevents re-animation bug)
+                Component.onCompleted: {
+                    if (!modelData.hasAnimated) {
+                        modelData.hasAnimated = true
+                        expandAnim.start()
+                        slideAnim.start()
                     }
                 }
                 
-                // Auto-hide after 5 seconds
-                Timer {
-                    interval: 5000
-                    running: true
-                    onTriggered: modelData.close()
+                // Smooth removal animation
+                Behavior on height {
+                    enabled: !notifCard.isVisible
+                    NumberAnimation { 
+                        duration: 200
+                        easing.type: Easing.OutCubic
+                    }
                 }
                 
-                // Mouse interaction
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: {
-                        // Open Control Center to notifications
-                        // For now, just close this notification
-                        modelData.close()
-                    }
+                Behavior on opacity {
+                    enabled: !notifCard.isVisible
+                    NumberAnimation { duration: 200 }
+                }
+                
+                opacity: isVisible ? 1 : 0
+                
+                Rectangle {
+                    id: cardBg
+                    width: parent.width
+                    height: contentLayout.implicitHeight + 20
+                    radius: 10
                     
+                    // Transform origin at top-right corner for expand effect
+                    transformOrigin: Item.TopRight
+                    
+                    // Glassmorphic background
+                    color: Qt.rgba(
+                        pywal?.background.r ?? 0.1,
+                        pywal?.background.g ?? 0.1,
+                        pywal?.background.b ?? 0.1,
+                        0.92
+                    )
+                    
+                    // Subtle border
+                    border.width: 1
+                    border.color: Qt.rgba(
+                        pywal?.foreground.r ?? 1,
+                        pywal?.foreground.g ?? 1,
+                        pywal?.foreground.b ?? 1,
+                        0.12
+                    )
+                    
+                    // Urgent notification accent
                     Rectangle {
-                        anchors.fill: parent
-                        radius: parent.parent.radius
-                        color: Qt.rgba(1, 1, 1, 0.1)
-                        opacity: parent.containsMouse ? 1 : 0
-                        
-                        Behavior on opacity {
-                            NumberAnimation { duration: 150 }
+                        width: 3
+                        height: parent.height - 8
+                        anchors.left: parent.left
+                        anchors.leftMargin: 4
+                        anchors.verticalCenter: parent.verticalCenter
+                        radius: 1.5
+                        color: pywal?.color1 ?? "#f38ba8"
+                        visible: modelData.urgency === 2
+                    }
+                    
+                    // Expand from corner animation - smooth
+                    scale: 1
+                    NumberAnimation {
+                        id: expandAnim
+                        target: cardBg
+                        property: "scale"
+                        from: 0.85
+                        to: 1.0
+                        duration: 300
+                        easing.type: Easing.OutCubic
+                    }
+                    
+                    // Slide in from right animation
+                    transform: Translate {
+                        id: slideTransform
+                        x: 0
+                    }
+                    
+                    NumberAnimation {
+                        id: slideAnim
+                        target: slideTransform
+                        property: "x"
+                        from: 40
+                        to: 0
+                        duration: 300
+                        easing.type: Easing.OutCubic
+                    }
+                    
+                    // Auto-dismiss timer (7 seconds)
+                    Timer {
+                        interval: 7000
+                        running: notifCard.isVisible
+                        onTriggered: {
+                            notifCard.isVisible = false
+                            Qt.callLater(() => modelData.close())
                         }
                     }
-                }
-                
-                ColumnLayout {
-                    id: contentLayout
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.margins: 15
-                    spacing: 8
                     
-                    // Header row
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 10
+                    // Hover interaction
+                    MouseArea {
+                        id: cardMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
                         
-                        // App icon
+                        // Subtle hover highlight
                         Rectangle {
-                            width: 32
-                            height: 32
-                            radius: 8
-                            color: Qt.rgba(1, 1, 1, 0.1)
-                            visible: modelData.appIcon && modelData.appIcon.length > 0
+                            anchors.fill: parent
+                            radius: parent.parent.radius
+                            color: Qt.rgba(1, 1, 1, 0.05)
+                            opacity: cardMouseArea.containsMouse ? 1 : 0
                             
-                            Image {
-                                anchors.centerIn: parent
-                                width: 24
-                                height: 24
-                                source: modelData.appIcon || ""
-                                fillMode: Image.PreserveAspectFit
+                            Behavior on opacity {
+                                NumberAnimation { duration: 150 }
                             }
                         }
-                        
-                        // App name
-                        Text {
-                            text: modelData.appName || "Notification"
-                            font.pixelSize: 13
-                            font.weight: Font.Medium
-                            color: pywal?.foreground ?? "#ffffff"
-                            opacity: 0.8
+                    }
+                    
+                    ColumnLayout {
+                        id: contentLayout
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            top: parent.top
+                            margins: 14
                         }
+                        spacing: 6
                         
-                        Item { Layout.fillWidth: true }
-                        
-                        // Close button
-                        Rectangle {
-                            width: 24
-                            height: 24
-                            radius: 12
-                            color: closeMouseArea.containsMouse ? Qt.rgba(1, 0, 0, 0.3) : "transparent"
+                        // Header row
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
                             
+                            // App icon
+                            Item {
+                                Layout.preferredWidth: 24
+                                Layout.preferredHeight: 24
+                                visible: modelData.appIcon && modelData.appIcon.length > 0
+                                
+                                Image {
+                                    anchors.fill: parent
+                                    source: modelData.appIcon || ""
+                                    fillMode: Image.PreserveAspectFit
+                                    smooth: true
+                                    
+                                    layer.enabled: true
+                                    layer.effect: MultiEffect {
+                                        brightness: 0.1
+                                        saturation: 0.8
+                                    }
+                                }
+                            }
+                            
+                            // App name
                             Text {
-                                anchors.centerIn: parent
-                                text: "✕"
-                                font.pixelSize: 14
+                                text: modelData.appName || "Notification"
+                                font.pixelSize: 11
+                                font.weight: Font.Medium
+                                font.family: "Inter"
                                 color: pywal?.foreground ?? "#ffffff"
+                                opacity: 0.6
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
                             }
                             
-                            MouseArea {
-                                id: closeMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    mouse.accepted = true
-                                    modelData.close()
+                            // Timestamp
+                            Text {
+                                text: modelData.timeString || "now"
+                                font.pixelSize: 10
+                                font.family: "Inter"
+                                color: pywal?.foreground ?? "#ffffff"
+                                opacity: 0.5
+                            }
+                            
+                            // Close button
+                            Rectangle {
+                                Layout.preferredWidth: 28
+                                Layout.preferredHeight: 28
+                                radius: 14
+                                color: closeMouseArea.containsMouse ? 
+                                       Qt.rgba(1, 0.3, 0.3, 0.2) : "transparent"
+                                
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "×"
+                                    font.pixelSize: 18
+                                    font.weight: Font.Light
+                                    color: pywal?.foreground ?? "#ffffff"
+                                    opacity: closeMouseArea.containsMouse ? 1 : 0.5
+                                }
+                                
+                                MouseArea {
+                                    id: closeMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        mouse.accepted = true
+                                        notifCard.isVisible = false
+                                        Qt.callLater(() => modelData.close())
+                                    }
+                                }
+                                
+                                Behavior on color {
+                                    ColorAnimation { duration: 150 }
                                 }
                             }
                         }
-                    }
-                    
-                    // Summary (title)
-                    Text {
-                        Layout.fillWidth: true
-                        text: modelData.summary || ""
-                        font.pixelSize: 15
-                        font.weight: Font.Bold
-                        color: pywal?.foreground ?? "#ffffff"
-                        wrapMode: Text.Wrap
-                        maximumLineCount: 2
-                        elide: Text.ElideRight
-                    }
-                    
-                    // Body
-                    Text {
-                        Layout.fillWidth: true
-                        text: modelData.body || ""
-                        font.pixelSize: 13
-                        color: pywal?.foreground ?? "#ffffff"
-                        opacity: 0.9
-                        wrapMode: Text.Wrap
-                        maximumLineCount: 3
-                        elide: Text.ElideRight
-                        visible: modelData.body && modelData.body.length > 0
-                    }
-                    
-                    // Image
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 100
-                        radius: 8
-                        clip: true
-                        visible: modelData.image && modelData.image.length > 0
-                        color: "transparent"
                         
-                        Image {
-                            anchors.fill: parent
-                            source: modelData.image || ""
-                            fillMode: Image.PreserveAspectCrop
+                        // Summary (title)
+                        Text {
+                            Layout.fillWidth: true
+                            text: modelData.summary || ""
+                            font.pixelSize: 14
+                            font.weight: Font.DemiBold
+                            font.family: "Inter"
+                            color: pywal?.foreground ?? "#ffffff"
+                            wrapMode: Text.Wrap
+                            maximumLineCount: 2
+                            elide: Text.ElideRight
+                            lineHeight: 1.2
+                        }
+                        
+                        // Body
+                        Text {
+                            Layout.fillWidth: true
+                            text: modelData.body || ""
+                            font.pixelSize: 12
+                            font.family: "Inter"
+                            color: pywal?.foreground ?? "#ffffff"
+                            opacity: 0.85
+                            wrapMode: Text.Wrap
+                            maximumLineCount: 3
+                            elide: Text.ElideRight
+                            lineHeight: 1.3
+                            visible: modelData.body && modelData.body.length > 0
+                        }
+                        
+                        // Image
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 90
+                            visible: modelData.image && modelData.image.length > 0
+                            
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 6
+                                clip: true
+                                color: Qt.rgba(0, 0, 0, 0.3)
+                                
+                                Image {
+                                    anchors.fill: parent
+                                    source: modelData.image || ""
+                                    fillMode: Image.PreserveAspectCrop
+                                    smooth: true
+                                }
+                            }
+                        }
+                        
+                        // Action buttons
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: 6
+                            visible: modelData.actions && modelData.actions.length > 0
+                            
+                            Repeater {
+                                model: modelData.actions || []
+                                
+                                Rectangle {
+                                    width: actionText.width + 16
+                                    height: 28
+                                    radius: 6
+                                    color: actionMouse.containsMouse ?
+                                           Qt.rgba(pywal?.color4.r ?? 0.6, 
+                                                  pywal?.color4.g ?? 0.9,
+                                                  pywal?.color4.b ?? 0.6, 0.3) :
+                                           Qt.rgba(1, 1, 1, 0.08)
+                                    
+                                    Text {
+                                        id: actionText
+                                        anchors.centerIn: parent
+                                        text: modelData.text || modelData.identifier
+                                        font.pixelSize: 11
+                                        font.weight: Font.Medium
+                                        font.family: "Inter"
+                                        color: pywal?.foreground ?? "#ffffff"
+                                    }
+                                    
+                                    MouseArea {
+                                        id: actionMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            modelData.invoke()
+                                            notifCard.isVisible = false
+                                            Qt.callLater(() => notifCard.modelData.close())
+                                        }
+                                    }
+                                    
+                                    Behavior on color {
+                                        ColorAnimation { duration: 150 }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

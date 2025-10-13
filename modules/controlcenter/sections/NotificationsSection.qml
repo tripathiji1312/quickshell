@@ -68,7 +68,7 @@ Item {
                 height: 36
                 radius: 18
                 color: Qt.rgba(1, 1, 1, 0.1)
-                visible: (notifs.activeNotifications?.length ?? 0) > 0
+                visible: (notifs.recentNotifications?.length ?? 0) > 0
                 
                 Text {
                     anchors.centerIn: parent
@@ -101,7 +101,7 @@ Item {
                 spacing: 8
                 clip: true
                 
-                model: notifs.activeNotifications ?? []
+                model: notifs.recentNotifications ?? []
                 
                 // Empty state
                 Text {
@@ -129,6 +129,9 @@ Item {
                                   root.urgentColor.g,
                                   root.urgentColor.b, 0.2) :
                            Qt.rgba(1, 1, 1, 0.05)
+                    
+                    // Slightly dimmed if closed
+                    opacity: modelData.closed ? 0.6 : 1.0
                     
                     // Hover effect
                     Rectangle {
