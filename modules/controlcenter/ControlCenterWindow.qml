@@ -255,7 +255,10 @@ PanelWindow {
                         sublabel: notifs.dnd ? "On" : "Off"
                         active: notifs.dnd
                         primaryColor: pywal.color1
-                        onClicked: notifs.dnd = !notifs.dnd
+                        onClicked: {
+                            notifs.toggleDnd()
+                            console.log("🔕 DND toggled:", notifs.dnd)
+                        }
                     }
                     
                     // Idle Inhibitor toggle
@@ -266,7 +269,10 @@ PanelWindow {
                         sublabel: idleInhibitor.inhibited ? "On" : "Off"
                         active: idleInhibitor.inhibited
                         primaryColor: pywal.color3
-                        onClicked: idleInhibitor.inhibited = !idleInhibitor.inhibited
+                        onClicked: {
+                            idleInhibitor.inhibited = !idleInhibitor.inhibited
+                            console.log("☕ Caffeine toggled:", idleInhibitor.inhibited)
+                        }
                     }
                 }
                 
