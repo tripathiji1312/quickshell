@@ -11,9 +11,10 @@ Item {
     
     readonly property var pywal: QsServices.Pywal
     readonly property var audio: QsServices.Audio
+    readonly property var volumeMonitor: QsServices.VolumeMonitor
     readonly property bool isHovered: mouseArea.containsMouse
-    readonly property bool isMuted: audio.muted
-    readonly property int percentage: audio.percentage
+    readonly property bool isMuted: volumeMonitor.muted
+    readonly property int percentage: volumeMonitor.percentage
     
     implicitWidth: volumeRow.implicitWidth
     implicitHeight: volumeRow.implicitHeight

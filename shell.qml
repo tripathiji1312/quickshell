@@ -6,11 +6,16 @@ import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick 6.10
 import "services" as QsServices
+import "modules/osd"
 
 ShellRoot {
+    id: root
+    
     // Initialize services immediately
     readonly property var notifs: QsServices.Notifs
     readonly property var pywal: QsServices.Pywal
+    readonly property var audio: QsServices.Audio
+    readonly property var brightness: QsServices.Brightness
     
     // Direct NotificationServer to ensure it starts
     NotificationServer {
@@ -24,21 +29,7 @@ ShellRoot {
         persistenceSupported: true
         
         onNotification: notif => {
-            // Filter out volume/brightness spam notifications
-            const appName = notif.appName.toLowerCase();
-            const summary = notif.summary.toLowerCase();
-            
-            // Skip notifications from volume/brightness tools - we have our own popups
-            if (appName.includes("brightness") || 
-                appName.includes("volume") ||
-                appName.includes("brightnessctl") ||
-                summary.includes("volume") ||
-                summary.includes("brightness")) {
-                console.log("🔇 [Filtered] Skipping OSD notification:", notif.appName, notif.summary);
-                return;
-            }
-            
-            console.log("📬 [ShellRoot] Notification received:", notif.summary);
+            console.log("📬 [ShellRoot] Notification received:", notif.appName, notif.summary);
             notif.tracked = true;
             notifs.addNotification(notif);
         }
@@ -57,6 +48,11 @@ ShellRoot {
     Loader {
         id: notificationPopupsLoader
         source: "modules/bar/components/NotificationPopups.qml"
+    }
+    
+    // OSD overlays (volume and brightness)
+    Wrapper {
+        pywal: root.pywal
     }
 
     Component.onCompleted: {

@@ -234,9 +234,26 @@ PanelWindow {
                                         anchors.centerIn: parent
                                         width: 20
                                         height: 20
-                                        source: modelData.appIcon || ""
+                                        source: {
+                                            if (!modelData.appIcon) return ""
+                                            // Check if it's a file path
+                                            if (modelData.appIcon.startsWith("/") || modelData.appIcon.startsWith("file://")) {
+                                                return modelData.appIcon
+                                            }
+                                            // Otherwise try as icon name from theme
+                                            return "image://icon/" + modelData.appIcon
+                                        }
                                         fillMode: Image.PreserveAspectFit
                                         smooth: true
+                                        cache: false
+                                        asynchronous: true
+                                        
+                                        // Fallback to transparent if icon fails to load
+                                        onStatusChanged: {
+                                            if (status === Image.Error) {
+                                                parent.visible = false
+                                            }
+                                        }
                                     }
                                 }
                                 
@@ -374,9 +391,19 @@ PanelWindow {
                                     
                                     Image {
                                         anchors.fill: parent
-                                        source: modelData.image || ""
+                                        source: {
+                                            if (!modelData.image) return ""
+                                            // Check if it's a file path
+                                            if (modelData.image.startsWith("/") || modelData.image.startsWith("file://")) {
+                                                return modelData.image
+                                            }
+                                            // Otherwise try as icon name
+                                            return "image://icon/" + modelData.image
+                                        }
                                         fillMode: Image.PreserveAspectCrop
                                         smooth: true
+                                        cache: false
+                                        asynchronous: true
                                     }
                                 }
                             }

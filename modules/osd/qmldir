@@ -1,0 +1,4 @@
+module osd
+VolumeOSD 1.0 VolumeOSD.qml
+BrightnessOSD 1.0 BrightnessOSD.qml
+Wrapper 1.0 Wrapper.qml

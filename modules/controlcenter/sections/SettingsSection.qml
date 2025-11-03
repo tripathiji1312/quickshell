@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts 6.10
 import QtQuick.Controls 6.10
 import Quickshell
+import Quickshell.Io
 import "../../../services" as QsServices
 
 Item {
@@ -9,6 +10,7 @@ Item {
     
     readonly property var pywal: QsServices.Pywal
     readonly property var audio: QsServices.Audio
+    readonly property var volumeMonitor: QsServices.VolumeMonitor
     readonly property var brightness: QsServices.Brightness
     readonly property var network: QsServices.Network
     readonly property var idleInhibitor: QsServices.IdleInhibitor
@@ -499,7 +501,7 @@ Item {
                     spacing: 12
                     
                     Text {
-                        text: audio.muted ? "󰖁" : "󰕾"
+                        text: volumeMonitor.muted ? "󰖁" : "󰕾"
                         font.family: "Material Design Icons"
                         font.pixelSize: 24
                         color: pywal.foreground
@@ -509,9 +511,19 @@ Item {
                         Layout.fillWidth: true
                         from: 0
                         to: 150
-                        value: (audio.volume ?? 0) * 100  // Convert 0-1.5 to 0-150, handle undefined
+                        value: volumeMonitor.percentage
                         
-                        onMoved: audio.setVolume(value / 100)
+                        onMoved: {
+                            // Update using pamixer and write to file
+                            audio.setVolume(value / 100)
+                            // Also update the file immediately for OSD
+                            volumeUpdateProc.running = true
+                        }
+                        
+                        Process {
+                            id: volumeUpdateProc
+                            command: ["sh", "-c", `pamixer --set-volume ${parent.value.toFixed(0)} && echo ${parent.value.toFixed(0)} > /tmp/volume_osd`]
+                        }
                         
                         background: Rectangle {
                             x: parent.leftPadding
@@ -542,7 +554,7 @@ Item {
                     }
                     
                     Text {
-                        text: audio.percentage + "%"
+                        text: volumeMonitor.percentage + "%"
                         font.family: "Inter"
                         font.pixelSize: 12
                         font.weight: Font.Medium

@@ -6,6 +6,7 @@ singleton Time Time.qml
 singleton Network Network.qml
 singleton Brightness Brightness.qml
 singleton Audio Audio.qml
+singleton VolumeMonitor VolumeMonitor.qml
 singleton SystemUsage SystemUsage.qml
 singleton IdleInhibitor IdleInhibitor.qml
 singleton Notifs Notifs.qml
