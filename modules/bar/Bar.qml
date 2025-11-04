@@ -65,6 +65,13 @@ Item {
                 }
             }
         }
+        
+        // System Tray
+        Loader {
+            Layout.alignment: Qt.AlignVCenter
+            Layout.leftMargin: 8
+            source: "components/SystemTray.qml"
+        }
     }
     
     // Center section - Clock (absolutely centered)
