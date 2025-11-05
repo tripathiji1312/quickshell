@@ -10,24 +10,97 @@ Singleton {
     property list<Notif> notifications: []
     readonly property var activeNotifications: notifications.filter(n => !n.closed)
     
+    // Maximum notifications to keep in memory (lowercase to comply with QML naming rules)
+    readonly property int maxNotifications: 100
+    
     // Show all notifications from past 24 hours (including closed ones) - for notification center
     readonly property var recentNotifications: notifications.filter(n => {
         const hoursSinceNotif = (new Date().getTime() - n.timestamp.getTime()) / (1000 * 60 * 60);
         return hoursSinceNotif < 24;
     }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
     
+    // Group notifications by app for better UX
+    readonly property var groupedNotifications: {
+        const groups = {}
+        const active = activeNotifications
+        for (let i = 0; i < active.length; i++) {
+            const n = active[i]
+            const key = n.appName || "Unknown"
+            if (!groups[key]) {
+                groups[key] = []
+            }
+            groups[key].push(n)
+        }
+        return groups
+    }
+    
+    // Get notification counts per app
+    readonly property var notificationCounts: {
+        const counts = {}
+        const grouped = groupedNotifications
+        for (let app in grouped) {
+            counts[app] = grouped[app].length
+        }
+        return counts
+    }
+    
     property bool dnd: false
+    
+    // Cleanup timer to prevent memory leaks
+    Timer {
+        interval: 3600000  // Clean up every hour
+        repeat: true
+        running: true
+        triggeredOnStart: false
+        
+        onTriggered: {
+            const oneDayAgo = new Date().getTime() - (24 * 60 * 60 * 1000)
+            const oldCount = root.notifications.length
+            root.notifications = root.notifications.filter(n => 
+                n.timestamp.getTime() > oneDayAgo
+            )
+            const cleaned = oldCount - root.notifications.length
+            if (cleaned > 0) {
+                console.log("🧹 [Notifs] Cleaned up", cleaned, "old notifications")
+            }
+        }
+    }
     
     // Add notification from external NotificationServer
     function addNotification(notif) {
-        console.log("📬 [Notifs Service] Adding notification:", notif.summary);
+        // Check DND mode
+        if (dnd && notif.urgency < 2) {
+            console.log("� [Notifs Service] DND active - suppressing notification:", notif.summary);
+            return;
+        }
+        
+        console.log("�📬 [Notifs Service] Adding notification:", notif.summary);
         
         const notifWrapper = notifComponent.createObject(root, {
             notification: notif
         });
         
-        root.notifications = [notifWrapper, ...root.notifications];
+        // Cap maximum notifications to prevent memory leaks
+        root.notifications = [notifWrapper, ...root.notifications].slice(0, root.maxNotifications);
         console.log("📋 Total notifications:", root.notifications.length);
+    }
+    
+    // Toggle DND mode
+    function toggleDnd() {
+        dnd = !dnd;
+        console.log("🔕 [Notifs Service] DND mode:", dnd ? "enabled" : "disabled");
+    }
+    
+    // Clear all notifications
+    function clearAll() {
+        notifications.forEach(n => n.close());
+        console.log("🧹 [Notifs Service] All notifications cleared");
+    }
+    
+    // Clear notifications from specific app
+    function clearApp(appName) {
+        notifications.filter(n => n.appName === appName).forEach(n => n.close());
+        console.log("🧹 [Notifs Service] Cleared notifications from:", appName);
     }
 
     // Notification wrapper component
@@ -157,22 +230,5 @@ Singleton {
             notif.destroy();
             console.log("🗑️ [Notifs] Notification permanently deleted");
         }
-    }
-    
-    // Clear all notifications (permanently remove from history)
-    function clearAll() {
-        console.log("🗑️ [Notifs] Clearing all notifications");
-        notifications.forEach(n => {
-            if (n.notification) {
-                n.notification.dismiss();
-            }
-            n.destroy();
-        });
-        notifications = [];
-    }
-    
-    // Toggle DND
-    function toggleDnd() {
-        dnd = !dnd;
     }
 }

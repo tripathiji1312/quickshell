@@ -296,18 +296,37 @@ Singleton {
         }
     }
     
-    // Update timer
+    // Update timer - optimized with staggered updates
     Timer {
         id: updateTimer
-        interval: 2000
+        interval: 2000  // Base interval
         repeat: true
+        triggeredOnStart: true  // Immediate first read
+        
+        property int tickCount: 0
+        
         onTriggered: {
+            tickCount++
+            
+            // Update CPU, Memory, Network every tick (2s)
             updateCpu()
             updateMemory()
-            updateDisk()
             updateNetwork()
-            updateGpu()
-            updateTopProcesses()
+            
+            // Update Disk less frequently (every 10s)
+            if (tickCount % 5 === 0) {
+                updateDisk()
+            }
+            
+            // Update GPU moderately (every 4s)
+            if (tickCount % 2 === 0) {
+                updateGpu()
+            }
+            
+            // Update top processes less frequently (every 6s)
+            if (tickCount % 3 === 0) {
+                updateTopProcesses()
+            }
         }
     }
 }

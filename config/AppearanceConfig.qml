@@ -34,12 +34,12 @@ QtObject {
 
     readonly property var anim: QtObject {
         readonly property var durations: QtObject {
-            property int tiny: 100
-            property int small: 150
+            property int instant: 0
+            property int fast: 150
             property int normal: 200
             property int medium: 250
-            property int large: 300
-            property int huge: 400
+            property int slow: 350
+            property int slower: 500
         }
 
         readonly property var curves: QtObject {
@@ -49,6 +49,13 @@ QtObject {
             property var standardAccel: [0.3, 0.0, 1, 1.0]
             property var emphasizedDecel: [0.05, 0.7, 0.1, 1.0]
             property var emphasizedAccel: [0.3, 0.0, 0.8, 0.15]
+        }
+        
+        readonly property var easing: QtObject {
+            property int standard: Easing.OutCubic
+            property int emphasized: Easing.OutBack
+            property int sharp: Easing.InOutQuad
+            property int smooth: Easing.InOutCubic
         }
     }
 

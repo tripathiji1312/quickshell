@@ -40,12 +40,17 @@ Item {
         
         // Minimal Workspaces
         Loader {
+            id: workspacesLoader
             Layout.alignment: Qt.AlignVCenter
+            asynchronous: true
             source: "components/Workspaces.qml"
-            onStatusChanged: {
-                if (status === Loader.Ready) {
-                    item.screen = Qt.binding(() => root.screen)
-                }
+            
+            Binding {
+                target: workspacesLoader.item
+                property: "screen"
+                value: root.screen
+                when: workspacesLoader.status === Loader.Ready && root.screen !== undefined
+                restoreMode: Binding.RestoreBinding
             }
         }
         
@@ -56,27 +61,41 @@ Item {
             Layout.leftMargin: 8
             Layout.minimumWidth: 120
             Layout.preferredWidth: item ? item.implicitWidth : 120
+            asynchronous: true
             source: "components/MediaPlayer.qml"
             
-            onStatusChanged: {
-                if (status === Loader.Ready) {
-                    item.barWindow = Qt.binding(() => root.barWindow)
-                    item.mediaPopup = Qt.binding(() => root.mediaPopup)
-                }
+            Binding {
+                target: mediaPlayerLoader.item
+                property: "barWindow"
+                value: root.barWindow
+                when: mediaPlayerLoader.status === Loader.Ready && root.barWindow !== undefined
+                restoreMode: Binding.RestoreBinding
+            }
+            
+            Binding {
+                target: mediaPlayerLoader.item
+                property: "mediaPopup"
+                value: root.mediaPopup
+                when: mediaPlayerLoader.status === Loader.Ready && root.mediaPopup !== undefined
+                restoreMode: Binding.RestoreBinding
             }
         }
         
         // System Tray
         Loader {
+            id: systemTrayLoader
             Layout.alignment: Qt.AlignVCenter
             Layout.leftMargin: 8
+            asynchronous: true
             source: "components/SystemTray.qml"
         }
     }
     
     // Center section - Clock (absolutely centered)
     Loader {
+        id: clockLoader
         anchors.centerIn: parent
+        asynchronous: true
         source: "components/Clock.qml"
     }
     
@@ -89,7 +108,9 @@ Item {
         
         // System usage (CPU, Memory, Disk)
         Loader {
+            id: systemUsageLoader
             Layout.alignment: Qt.AlignVCenter
+            asynchronous: true
             source: "components/SystemUsage.qml"
         }
         
@@ -104,13 +125,23 @@ Item {
         Loader {
             id: volumeLoader
             Layout.alignment: Qt.AlignVCenter
+            asynchronous: true
             source: "components/Volume.qml"
             
-            onStatusChanged: {
-                if (status === Loader.Ready) {
-                    item.barWindow = Qt.binding(() => root.barWindow)
-                    item.volumePopup = Qt.binding(() => root.volumePopup)
-                }
+            Binding {
+                target: volumeLoader.item
+                property: "barWindow"
+                value: root.barWindow
+                when: volumeLoader.status === Loader.Ready && root.barWindow !== undefined
+                restoreMode: Binding.RestoreBinding
+            }
+            
+            Binding {
+                target: volumeLoader.item
+                property: "volumePopup"
+                value: root.volumePopup
+                when: volumeLoader.status === Loader.Ready && root.volumePopup !== undefined
+                restoreMode: Binding.RestoreBinding
             }
         }
         
@@ -118,13 +149,23 @@ Item {
         Loader {
             id: brightnessLoader
             Layout.alignment: Qt.AlignVCenter
+            asynchronous: true
             source: "components/Brightness.qml"
             
-            onStatusChanged: {
-                if (status === Loader.Ready) {
-                    item.barWindow = Qt.binding(() => root.barWindow)
-                    item.brightnessPopup = Qt.binding(() => root.brightnessPopup)
-                }
+            Binding {
+                target: brightnessLoader.item
+                property: "barWindow"
+                value: root.barWindow
+                when: brightnessLoader.status === Loader.Ready && root.barWindow !== undefined
+                restoreMode: Binding.RestoreBinding
+            }
+            
+            Binding {
+                target: brightnessLoader.item
+                property: "brightnessPopup"
+                value: root.brightnessPopup
+                when: brightnessLoader.status === Loader.Ready && root.brightnessPopup !== undefined
+                restoreMode: Binding.RestoreBinding
             }
         }
         
@@ -139,13 +180,23 @@ Item {
         Loader {
             id: networkLoader
             Layout.alignment: Qt.AlignVCenter
+            asynchronous: true
             source: "components/Network.qml"
             
-            onStatusChanged: {
-                if (status === Loader.Ready) {
-                    item.barWindow = Qt.binding(() => root.barWindow)
-                    item.networkPopup = Qt.binding(() => root.networkPopup)
-                }
+            Binding {
+                target: networkLoader.item
+                property: "barWindow"
+                value: root.barWindow
+                when: networkLoader.status === Loader.Ready && root.barWindow !== undefined
+                restoreMode: Binding.RestoreBinding
+            }
+            
+            Binding {
+                target: networkLoader.item
+                property: "networkPopup"
+                value: root.networkPopup
+                when: networkLoader.status === Loader.Ready && root.networkPopup !== undefined
+                restoreMode: Binding.RestoreBinding
             }
         }
         
@@ -153,13 +204,23 @@ Item {
         Loader {
             id: bluetoothLoader
             Layout.alignment: Qt.AlignVCenter
+            asynchronous: true
             source: "components/Bluetooth.qml"
             
-            onStatusChanged: {
-                if (status === Loader.Ready) {
-                    item.barWindow = Qt.binding(() => root.barWindow)
-                    item.bluetoothPopup = Qt.binding(() => root.bluetoothPopup)
-                }
+            Binding {
+                target: bluetoothLoader.item
+                property: "barWindow"
+                value: root.barWindow
+                when: bluetoothLoader.status === Loader.Ready && root.barWindow !== undefined
+                restoreMode: Binding.RestoreBinding
+            }
+            
+            Binding {
+                target: bluetoothLoader.item
+                property: "bluetoothPopup"
+                value: root.bluetoothPopup
+                when: bluetoothLoader.status === Loader.Ready && root.bluetoothPopup !== undefined
+                restoreMode: Binding.RestoreBinding
             }
         }
         
@@ -174,18 +235,23 @@ Item {
         Loader {
             id: controlCenterLoader
             Layout.alignment: Qt.AlignVCenter
+            asynchronous: true
             source: "components/ControlCenterToggle.qml"
             
-            onStatusChanged: {
-                if (status === Loader.Ready) {
-                    item.controlCenter = Qt.binding(() => root.controlCenter)
-                }
+            Binding {
+                target: controlCenterLoader.item
+                property: "controlCenter"
+                value: root.controlCenter
+                when: controlCenterLoader.status === Loader.Ready && root.controlCenter !== undefined
+                restoreMode: Binding.RestoreBinding
             }
         }
         
         // Battery module
         Loader {
+            id: batteryLoader
             Layout.alignment: Qt.AlignVCenter
+            asynchronous: true
             source: "components/Battery.qml"
         }
     }

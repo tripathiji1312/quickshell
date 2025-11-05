@@ -50,8 +50,22 @@ Scope {
     Loader {
         id: controlCenterLoader
         source: "../controlcenter/ControlCenterWindow.qml"
+        asynchronous: true
         
         property var controlCenter: item
+        
+        onStatusChanged: {
+            console.log("🎛️ [BarWrapper] Control Center loader status:", 
+                       status === Loader.Ready ? "READY" : 
+                       status === Loader.Loading ? "LOADING" : 
+                       status === Loader.Error ? "ERROR" : "NULL")
+            if (status === Loader.Error) {
+                console.error("🎛️ [BarWrapper] Control Center failed to load!")
+            }
+            if (status === Loader.Ready) {
+                console.log("🎛️ [BarWrapper] Control Center loaded successfully, item:", item ? "EXISTS" : "NULL")
+            }
+        }
     }
     
     Variants {

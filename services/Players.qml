@@ -21,11 +21,12 @@ Singleton {
         return list[0] ?? null
     }
     
-    // Watch for changes in player states and update active player
+    // Watch for changes in player states and update active player - optimized
     Timer {
-        interval: 500  // Check every 500ms for active player changes
+        interval: 1000  // Reduced from 500ms to 1000ms (media state doesn't change that often)
         running: true
         repeat: true
+        triggeredOnStart: true  // Get immediate first read
         onTriggered: {
             var newActive = null
             // Find the first playing player

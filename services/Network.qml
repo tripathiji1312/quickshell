@@ -77,12 +77,27 @@ Singleton {
     }
 
     function connectToNetwork(ssid: string, password: string): void {
+        // Validate SSID to prevent command injection
+        if (!ssid || ssid.trim().length === 0) {
+            console.error("❌ [Network] Invalid SSID: empty")
+            return
+        }
+        
+        // Check for dangerous characters that could be used for injection
+        const dangerousChars = [";", "`", "$", "|", "&", "\n", "\r", "\\"]
+        for (let i = 0; i < dangerousChars.length; i++) {
+            if (ssid.includes(dangerousChars[i])) {
+                console.error("❌ [Network] Invalid SSID: contains dangerous character")
+                return
+            }
+        }
+        
         if (password && password.length > 0) {
-            // Connect to new network with password
-            connectProc.exec(["nmcli", "dev", "wifi", "connect", ssid, "password", password]);
+            // Connect to new network with password - use -- to prevent option injection
+            connectProc.exec(["nmcli", "dev", "wifi", "connect", "--", ssid, "password", password]);
         } else {
-            // Try to connect to saved network first, fallback to connection if it fails
-            connectProc.exec(["nmcli", "connection", "up", ssid]);
+            // Try to connect to saved network first
+            connectProc.exec(["nmcli", "connection", "up", "--", ssid]);
         }
     }
     

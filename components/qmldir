@@ -1,4 +1,6 @@
 module qs.components
 Anim 1.0 Anim.qml
 Material3Popup 1.0 Material3Popup.qml
+NetworkGraph 1.0 NetworkGraph.qml
 StateLayer 1.0 StateLayer.qml
+PopupButton 1.0 PopupButton.qml

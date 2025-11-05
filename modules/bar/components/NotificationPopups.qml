@@ -4,6 +4,7 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import "../../../services" as QsServices
+import "../../../config" as QsConfig
 
 // Material 3 Expressive notification popup window
 PanelWindow {
@@ -11,6 +12,8 @@ PanelWindow {
     
     readonly property var pywal: QsServices.Pywal
     readonly property var notifs: QsServices.Notifs
+    readonly property var logger: QsServices.Logger
+    readonly property var config: QsConfig.Config
     
     // Modern color scheme - fully opaque
     readonly property color m3Surface: Qt.rgba(
@@ -23,8 +26,8 @@ PanelWindow {
     readonly property color m3OnSurface: pywal?.foreground ?? "#e6e6e6"
     readonly property color m3Error: pywal?.color1 ?? "#f38ba8"
     
-    // Get popups that should be shown (max 5 at a time, newest first)
-    readonly property var activePopups: notifs.activeNotifications.slice(0, 5)
+    // Get popups that should be shown (configurable max, newest first)
+    readonly property var activePopups: notifs.activeNotifications.slice(0, config.notifications.maxVisible)
     
     screen: Quickshell.screens[0]
     
@@ -34,35 +37,35 @@ PanelWindow {
     }
     
     margins {
-        top: 4
-        right: 8
+        top: config.notifications.margin
+        right: config.notifications.margin
     }
     
     visible: activePopups.length > 0
     color: "transparent"
     
-    implicitWidth: 340
+    implicitWidth: config.notifications.popupWidth
     implicitHeight: notifColumn.implicitHeight
     
-    // Smooth fast transition
+    // Smooth optimized transition
     Behavior on implicitHeight {
         NumberAnimation { 
-            duration: 250
-            easing.type: Easing.OutCubic
+            duration: config.appearance.anim.durations.normal
+            easing.type: config.appearance.anim.easing.standard
         }
     }
     
     Column {
         id: notifColumn
         width: parent.width
-        spacing: 8
+        spacing: config.notifications.spacing
         
-        // Smooth fast motion
+        // Smooth optimized motion
         move: Transition {
             NumberAnimation {
                 properties: "y"
-                duration: 250
-                easing.type: Easing.OutCubic
+                duration: config.appearance.anim.durations.normal
+                easing.type: config.appearance.anim.easing.standard
             }
         }
         
@@ -76,7 +79,7 @@ PanelWindow {
                 required property var modelData
                 required property int index
                 
-                width: 340
+                width: config.notifications.popupWidth
                 height: cardBg.visible ? cardBg.height : 0
                 
                 property bool isVisible: true
@@ -177,9 +180,9 @@ PanelWindow {
                             }
                         }
                         
-                        // Auto-dismiss timer
+                        // Auto-dismiss timer (configurable timeout)
                         Timer {
-                            interval: 7000
+                            interval: config.notifications.timeout
                             running: notifCard.isVisible
                             onTriggered: notifCard.dismiss()
                         }

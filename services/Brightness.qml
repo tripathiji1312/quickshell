@@ -38,14 +38,13 @@ Singleton {
     function setBrightness(value) {
         // Clamp between 0 and 1
         const newValue = Math.max(0, Math.min(1, value))
-        const rawValue = Math.round(newValue * maxValue)
         
-        // Use brightnessctl or ddcutil for AMD
-        const cmd = "brightnessctl set " + Math.round(newValue * 100) + "%"
+        // Use brightnessctl for AMD
+        const cmd = "brightnessctl set " + Math.round(newValue * 100) + "% && cat " + backlightPath
         setBrightnessProcess.command = ["/bin/sh", "-c", cmd]
         setBrightnessProcess.running = true
         
-        brightness = newValue
+        // Read brightness will be triggered by the update timer
     }
     
     function increaseBrightness() {
@@ -89,17 +88,18 @@ Singleton {
         }
     }
     
-    // Set brightness
+    // Set brightness process
     Process {
         id: setBrightnessProcess
         running: false
     }
     
-    // Update timer
+    // Update timer - optimized interval
     Timer {
         id: updateTimer
-        interval: 1000
+        interval: 2000  // Reduced frequency from 1000ms to 2000ms (brightness changes infrequently)
         repeat: true
+        triggeredOnStart: true  // Get immediate first read
         onTriggered: readBrightness()
     }
 }

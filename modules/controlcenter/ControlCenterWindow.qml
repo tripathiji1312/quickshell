@@ -14,8 +14,23 @@ PanelWindow {
     
     property bool shouldShow: false
     
+    // Use centralized UI state
+    readonly property var uiState: QsServices.UIState
+    readonly property var logger: QsServices.Logger
+    
+    // Sync with UIState
     onShouldShowChanged: {
-        console.log("🎛️ [ControlCenter] shouldShow changed to:", shouldShow)
+        logger.debug("ControlCenter", "shouldShow changed to: " + shouldShow)
+        uiState.controlCenterOpen = shouldShow
+    }
+    
+    Connections {
+        target: uiState
+        function onControlCenterOpenChanged() {
+            if (uiState.controlCenterOpen !== root.shouldShow) {
+                root.shouldShow = uiState.controlCenterOpen
+            }
+        }
     }
     
     readonly property var pywal: QsServices.Pywal
@@ -60,28 +75,32 @@ PanelWindow {
         top: 4
     }
     
-    width: 700
-    height: 1000  // 
+    implicitWidth: 700
+    implicitHeight: 1000
     color: "transparent"
     visible: shouldShow || dashboardContainer.opacity > 0
     
+    // PanelWindow doesn't support Keys directly - will add to content item
+    
     onVisibleChanged: {
-        console.log("🎛️ [ControlCenter] visible changed to:", visible)
+        logger.debug("ControlCenter", "visible changed to: " + visible)
     }
     
     Component.onCompleted: {
-        console.log("🎛️ [ControlCenter] Component loaded successfully")
+        logger.info("ControlCenter", "Component loaded successfully")
+        console.log("🎛️ [ControlCenter] Window created, shouldShow:", shouldShow)
     }
     
-    // Keybind toggle handler via file
-    FileView {
-        path: "/tmp/quickshell-cc-toggle"
-        watchChanges: true
-        onFileChanged: {
-            console.log("🎛️ [ControlCenter] Toggle keybind triggered")
-            root.shouldShow = !root.shouldShow
-        }
-    }
+    // Don't use FileView for toggle - causes warnings
+    // Keybind toggle handler via file - DISABLED (use direct binding instead)
+    // FileView {
+    //     path: "/tmp/quickshell-cc-toggle"
+    //     watchChanges: true
+    //     onFileChanged: {
+    //         logger.debug("ControlCenter", "Toggle keybind triggered")
+    //         root.shouldShow = !root.shouldShow
+    //     }
+    // }
     
     // Dashboard Panel
     Item {
@@ -93,16 +112,32 @@ PanelWindow {
         scale: 0.85
         opacity: 0
         
-        // Click outside dashboard to close
+        // Enable keyboard support - must be actively focused
+        focus: true
+        activeFocusOnTab: true
+        
+        Keys.onPressed: (event) => {
+            if (event.key === Qt.Key_Escape) {
+                logger.debug("ControlCenter", "Escape pressed - closing")
+                root.shouldShow = false
+                event.accepted = true
+            }
+        }
+        
+        onVisibleChanged: {
+            if (visible) {
+                forceActiveFocus()
+                logger.debug("ControlCenter", "Dashboard container got focus")
+            }
+        }
+        
+        // Click outside dashboard to close - placed at root level
         MouseArea {
             anchors.fill: parent
+            z: -1  // Behind the dashboard
             onClicked: {
-                // Check if click is outside dashboard rectangle
-                const localPos = mapToItem(dashboard, mouse.x, mouse.y)
-                if (!dashboard.contains(Qt.point(localPos.x, localPos.y))) {
-                    console.log("🎛️ [ControlCenter] Click outside detected, closing")
-                    root.shouldShow = false
-                }
+                logger.debug("ControlCenter", "Background clicked - closing")
+                root.shouldShow = false
             }
             enabled: root.shouldShow
         }
@@ -182,14 +217,21 @@ PanelWindow {
             anchors.fill: parent
             color: root.m3Surface
             radius: 24
+            z: 1  // In front of background MouseArea
             
             border.color: Qt.rgba(root.m3Primary.r, root.m3Primary.g, root.m3Primary.b, 0.3)
             border.width: 1
             
-            // Prevent clicks from going through
+            // Prevent clicks from propagating to background
             MouseArea {
                 anchors.fill: parent
-                onClicked: {} // Stop propagation
+                onClicked: (mouse) => {
+                    // Accept the event to stop propagation
+                    mouse.accepted = true
+                }
+                onPressed: (mouse) => {
+                    mouse.accepted = true
+                }
             }
             
             // Main content with ScrollView
@@ -1376,13 +1418,31 @@ PanelWindow {
                             visible: notifList.count > 0
                             clip: true
                             
+                            // Enhanced smooth scrolling
                             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                            ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                            ScrollBar.vertical.interactive: true
+                            
+                            contentWidth: availableWidth
                             
                             ListView {
                                 id: notifList
                                 width: parent.width
                                 model: notifs.recentNotifications
                                 spacing: 8
+                                
+                                // Enable smooth kinetic scrolling
+                                flickableDirection: Flickable.VerticalFlick
+                                boundsBehavior: Flickable.DragAndOvershootBounds
+                                boundsMovement: Flickable.FollowBoundsBehavior
+                                
+                                // Smooth scroll behavior
+                                Behavior on contentY {
+                                    SmoothedAnimation { 
+                                        velocity: 1200
+                                        maximumEasingTime: 200
+                                    }
+                                }
                                 
                                 // Add/Remove animations
                                 add: Transition {
