@@ -132,7 +132,7 @@ PanelWindow {
                     width: parent.width * (root.currentVolume / 100)
                     height: parent.height
                     radius: 2
-                    color: pywal.primary
+                    color: pywal?.primary ?? "#a6e3a1"
                     
                     Behavior on width {
                         NumberAnimation { 

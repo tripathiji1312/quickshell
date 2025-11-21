@@ -37,8 +37,8 @@ PanelWindow {
         top: 4
     }
     
-    width: 320
-    height: contentColumn.implicitHeight + 32
+    implicitWidth: 320
+    implicitHeight: contentColumn.implicitHeight + 32
     color: "transparent"
     visible: shouldShow || container.opacity > 0
     

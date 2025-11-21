@@ -21,55 +21,27 @@ Item {
     implicitWidth: bluetoothRow.implicitWidth
     implicitHeight: bluetoothRow.implicitHeight
     
-    // Show/hide popup timers
-    Timer {
-        id: showTimer
-        interval: 300
-        onTriggered: {
-            console.log("Bluetooth timer triggered - barWindow:", barWindow, "popup:", bluetoothPopup)
-            if (!barWindow) {
-                console.log("ERROR: barWindow is null/undefined")
-                return
-            }
-            if (!barWindow.screen) {
-                console.log("ERROR: barWindow.screen is null/undefined")
-                return
-            }
-            if (!bluetoothPopup) {
-                console.log("ERROR: bluetoothPopup is null/undefined")
-                return
-            }
-            
-            const pos = root.mapToItem(barWindow.contentItem, 0, 0)
-            // Position from right edge to avoid cutoff
-            const rightEdge = pos.x + root.width
-            const screenWidth = barWindow.screen.width
-            bluetoothPopup.margins.right = Math.round(screenWidth - rightEdge)
-            bluetoothPopup.margins.top = Math.round(barWindow.height + 6)  // Closer gap
-            bluetoothPopup.shouldShow = true
-            console.log("Bluetooth popup showing at right:", bluetoothPopup.margins.right, "top:", bluetoothPopup.margins.top)
-        }
-    }
-    
-    // Hover detection
+    // Click to toggle popup
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        hoverEnabled: true
-        
-        onEntered: {
-            console.log("Bluetooth hover entered")
-            showTimer.start()
-        }
-        
-        onExited: {
-            console.log("Bluetooth hover exited")
-            showTimer.stop()
-        }
+        cursorShape: Qt.PointingHandCursor
         
         onClicked: {
-            if (adapter) {
-                adapter.enabled = !adapter.enabled
+            if (!bluetoothPopup) return
+            
+            if (bluetoothPopup.shouldShow) {
+                bluetoothPopup.shouldShow = false
+            } else {
+                if (!barWindow || !barWindow.screen) return
+                
+                const pos = root.mapToItem(barWindow.contentItem, 0, 0)
+                const rightEdge = pos.x + root.width
+                const screenWidth = barWindow.screen.width
+                
+                bluetoothPopup.margins.right = Math.round(screenWidth - rightEdge)
+                bluetoothPopup.margins.top = Math.round(barWindow.height + 6)
+                bluetoothPopup.shouldShow = true
             }
         }
     }

@@ -20,54 +20,28 @@ Item {
     implicitWidth: networkRow.implicitWidth
     implicitHeight: networkRow.implicitHeight
     
-    // Show/hide popup timers
-    Timer {
-        id: showTimer
-        interval: 300
-        onTriggered: {
-            console.log("Network timer triggered - barWindow:", barWindow, "popup:", networkPopup)
-            if (!barWindow) {
-                console.log("ERROR: barWindow is null/undefined")
-                return
-            }
-            if (!barWindow.screen) {
-                console.log("ERROR: barWindow.screen is null/undefined")
-                return
-            }
-            if (!networkPopup) {
-                console.log("ERROR: networkPopup is null/undefined")
-                return
-            }
-            
-            const pos = root.mapToItem(barWindow.contentItem, 0, 0)
-            // Position from right edge to avoid cutoff
-            const rightEdge = pos.x + root.width
-            const screenWidth = barWindow.screen.width
-            networkPopup.margins.right = Math.round(screenWidth - rightEdge)
-            networkPopup.margins.top = Math.round(barWindow.height + 6)  // Closer gap
-            networkPopup.shouldShow = true
-            console.log("Network popup showing at right:", networkPopup.margins.right, "top:", networkPopup.margins.top)
-        }
-    }
-    
-    // Hover detection
+    // Click to toggle popup
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        hoverEnabled: true
-        
-        onEntered: {
-            console.log("Network hover entered")
-            showTimer.start()
-        }
-        
-        onExited: {
-            console.log("Network hover exited")
-            showTimer.stop()
-        }
+        cursorShape: Qt.PointingHandCursor
         
         onClicked: {
-            network.toggleWifi()
+            if (!networkPopup) return
+            
+            if (networkPopup.shouldShow) {
+                networkPopup.shouldShow = false
+            } else {
+                if (!barWindow || !barWindow.screen) return
+                
+                const pos = root.mapToItem(barWindow.contentItem, 0, 0)
+                const rightEdge = pos.x + root.width
+                const screenWidth = barWindow.screen.width
+                
+                networkPopup.margins.right = Math.round(screenWidth - rightEdge)
+                networkPopup.margins.top = Math.round(barWindow.height + 6)
+                networkPopup.shouldShow = true
+            }
         }
     }
     

@@ -38,7 +38,7 @@ Singleton {
     }
     
     Connections {
-        target: sink?.audio
+        target: sink ? sink.audio : null
         function onVolumeChanged() {
             console.log("🔊 [Audio] Sink audio volume changed! Raw:", sink?.audio?.volume, "Processed:", volume, "%:", percentage)
         }

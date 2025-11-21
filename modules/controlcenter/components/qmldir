@@ -1,0 +1,7 @@
+module ControlCenter.Components
+QuickToggle 1.0 QuickToggle.qml
+VolumeSlider 1.0 VolumeSlider.qml
+BrightnessSlider 1.0 BrightnessSlider.qml
+SystemStats 1.0 SystemStats.qml
+MediaCard 1.0 MediaCard.qml
+NotificationList 1.0 NotificationList.qml

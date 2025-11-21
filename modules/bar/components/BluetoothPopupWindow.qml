@@ -6,7 +6,7 @@ import Quickshell.Wayland
 import Quickshell.Bluetooth
 import "../../../services" as QsServices
 
-// Material 3 Expressive Bluetooth Popup
+// Premium Native-Feel Bluetooth Popup
 PanelWindow {
     id: popupWindow
     
@@ -21,10 +21,13 @@ PanelWindow {
         return a.name.localeCompare(b.name)
     })
     
-    // Material 3 colors
-    readonly property color m3Surface: Qt.rgba(pywal.background.r, pywal.background.g, pywal.background.b, 1.0)
-    readonly property color m3Primary: pywal.color6 ?? "#cba6f7"
-    readonly property color m3OnSurface: pywal.foreground
+    // Design Tokens
+    readonly property color cSurface: Qt.rgba(pywal.background.r, pywal.background.g, pywal.background.b, 0.95)
+    readonly property color cPrimary: pywal.color6 ?? "#cba6f7"
+    readonly property color cText: pywal.foreground
+    readonly property color cSubText: Qt.rgba(cText.r, cText.g, cText.b, 0.6)
+    readonly property color cBorder: Qt.rgba(cPrimary.r, cPrimary.g, cPrimary.b, 0.15)
+    readonly property color cHover: Qt.rgba(cText.r, cText.g, cText.b, 0.05)
     
     screen: Quickshell.screens[0]
     
@@ -34,385 +37,374 @@ PanelWindow {
     }
     
     margins {
-        right: 4
-        top: 4
+        right: 8
+        top: 0
     }
     
-    width: 360
-    height: contentColumn.implicitHeight + 24
+    implicitWidth: 320
+    implicitHeight: contentColumn.implicitHeight + 32
     color: "transparent"
     visible: shouldShow || container.opacity > 0
     
-    // Material 3 animated container (single animation for smooth appearance)
-    Item {
+    WlrLayershell.keyboardFocus: shouldShow ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    
+    // Main Container
+    FocusScope {
         id: container
         anchors.fill: parent
-        scale: 0.85
+        scale: 0.9
         opacity: 0
         transformOrigin: Item.TopRight
+        focus: true
         
-        SequentialAnimation {
-            running: popupWindow.shouldShow
-            ParallelAnimation {
-                NumberAnimation { target: container; property: "scale"; from: 0.85; to: 1.05; duration: 250; easing.type: Easing.OutCubic }
-                NumberAnimation { target: container; property: "opacity"; from: 0; to: 1; duration: 200 }
+        Keys.onEscapePressed: popupWindow.shouldShow = false
+        
+        onActiveFocusChanged: {
+            if (!activeFocus && popupWindow.shouldShow) {
+                // Close on focus loss (click outside)
+                popupWindow.shouldShow = false
             }
-            NumberAnimation { target: container; property: "scale"; to: 1.0; duration: 180; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
         }
         
-        ParallelAnimation {
-            running: !popupWindow.shouldShow && container.opacity > 0
-            NumberAnimation { target: container; property: "scale"; to: 0.9; duration: 180; easing.type: Easing.InCubic }
-            NumberAnimation { target: container; property: "opacity"; to: 0; duration: 180 }
+        // Entrance/Exit Animations
+        states: State {
+            name: "visible"
+            when: popupWindow.shouldShow
+            PropertyChanges { target: container; opacity: 1; scale: 1.0 }
         }
         
-        // Shadow layer (renders behind)
+        transitions: Transition {
+            from: "*"
+            to: "visible"
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; duration: 200; easing.type: Easing.OutQuad }
+                SpringAnimation { property: "scale"; spring: 3; damping: 0.25; epsilon: 0.005; mass: 0.8 }
+            }
+        }
+        
+        // Exit transition
+        Transition {
+            from: "visible"
+            to: "*"
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; duration: 150; easing.type: Easing.InQuad }
+                NumberAnimation { property: "scale"; to: 0.95; duration: 150; easing.type: Easing.InQuad }
+            }
+        }
+
+        // Shadow
         Rectangle {
             anchors.fill: backgroundRect
-            anchors.margins: -6
-            radius: backgroundRect.radius + 3
+            anchors.margins: -1
+            radius: backgroundRect.radius
             color: "transparent"
-            z: 0
-            
+            z: -1
             layer.enabled: true
             layer.effect: MultiEffect {
                 shadowEnabled: true
-                shadowColor: Qt.rgba(0, 0, 0, 0.35)
-                shadowBlur: 0.8
-                shadowVerticalOffset: 8
+                shadowColor: Qt.rgba(0, 0, 0, 0.4)
+                shadowBlur: 1.5
+                shadowVerticalOffset: 4
+                shadowHorizontalOffset: 0
             }
         }
         
-        // Background and content layer (renders on top)
+        // Background
         Rectangle {
             id: backgroundRect
             anchors.fill: parent
-            color: m3Surface
+            color: cSurface
             radius: 16
-            border.color: Qt.rgba(m3Primary.r, m3Primary.g, m3Primary.b, 0.2)
+            border.color: cBorder
             border.width: 1
-            z: 1
-            
-            MouseArea {
-                anchors.fill: parent
-                hoverEnabled: true
-                onEntered: popupWindow.isHovered = true
-                onExited: {
-                    popupWindow.isHovered = false
-                    popupWindow.shouldShow = false
-                }
-            }
+            clip: true
             
             ColumnLayout {
                 id: contentColumn
                 anchors.fill: parent
-                z: 2
-                anchors.margins: 12
-                spacing: 12
-        
-        // Header with title and toggle
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 12
-            
-            Text {
-                text: "Bluetooth"
-                font.family: "Inter"
-                font.pixelSize: 16
-                font.weight: Font.Bold
-                color: pywal.foreground
-            }
-            
-            Item { Layout.fillWidth: true }
-            
-            // Enable/Disable toggle
-            Rectangle {
-                Layout.preferredWidth: 48
-                Layout.preferredHeight: 24
-                radius: 12
+                anchors.margins: 16
+                spacing: 16
                 
-                color: adapter?.enabled ? pywal.color2 : Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.2)
-                
-                Behavior on color {
-                    ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
-                }
-                
-                Rectangle {
-                    width: 20
-                    height: 20
-                    radius: 10
-                    x: adapter?.enabled ? parent.width - width - 2 : 2
-                    y: 2
-                    color: "white"
-                    
-                    Behavior on x {
-                        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-                    }
-                }
-                
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: {
-                        if (adapter) adapter.enabled = !adapter.enabled
-                    }
-                }
-            }
-        }
-        
-        // Scan button
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 36
-            radius: 8
-            color: adapter?.discovering ? pywal.color3 : Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.1)
-            
-            Behavior on color {
-                ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
-            }
-            
-            RowLayout {
-                anchors.centerIn: parent
-                spacing: 8
-                
-                Text {
-                    text: adapter?.discovering ? "󰑐" : "󰑓"  // scanning vs search icon
-                    font.family: "Material Design Icons"
-                    font.pixelSize: 18
-                    color: pywal.foreground
-                    
-                    NumberAnimation on rotation {
-                        running: adapter?.discovering ?? false
-                        from: 0
-                        to: 360
-                        duration: 1500
-                        loops: Animation.Infinite
-                        easing.type: Easing.Linear
-                    }
-                }
-                
-                Text {
-                    text: adapter?.discovering ? "Scanning..." : "Scan for devices"
-                    font.family: "Inter"
-                    font.pixelSize: 13
-                    font.weight: Font.Medium
-                    color: pywal.foreground
-                }
-            }
-            
-            MouseArea {
-                anchors.fill: parent
-                enabled: adapter?.enabled ?? false
-                onClicked: {
-                    if (adapter) adapter.discovering = !adapter.discovering
-                }
-            }
-        }
-        
-        // Separator
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.1)
-        }
-        
-        // Device list
-        ListView {
-            id: deviceList
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.min(contentHeight, 300)
-            
-            spacing: 8
-            clip: true
-            interactive: contentHeight > 300
-            
-            model: devices
-            
-            delegate: Rectangle {
-                id: deviceItem
-                width: deviceList.width
-                height: 48
-                radius: 8
-                
-                required property var modelData
-                readonly property bool isConnecting: modelData.state === BluetoothDeviceState.Connecting
-                readonly property bool isDisconnecting: modelData.state === BluetoothDeviceState.Disconnecting
-                
-                color: modelData.connected 
-                    ? Qt.rgba(pywal.color2.r, pywal.color2.g, pywal.color2.b, 0.15)
-                    : Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.05)
-                
-                border.color: modelData.connected 
-                    ? Qt.rgba(pywal.color2.r, pywal.color2.g, pywal.color2.b, 0.3)
-                    : "transparent"
-                border.width: 1
-                
-                Behavior on color {
-                    ColorAnimation { duration: 300; easing.type: Easing.OutCubic }
-                }
-                
+                // Header
                 RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 10
+                    Layout.fillWidth: true
                     spacing: 12
                     
-                    // Device icon
-                    Text {
-                        text: {
-                            const icon = modelData.icon || "generic"
-                            if (icon.includes("audio")) return "󰋋"  // headphones
-                            if (icon.includes("phone")) return "󰄜"  // phone
-                            if (icon.includes("computer")) return "󰌢"  // computer
-                            if (icon.includes("mouse")) return "󰍽"  // mouse
-                            if (icon.includes("keyboard")) return "󰌌"  // keyboard
-                            return "󰂯"  // bluetooth
-                        }
-                        font.family: "Material Design Icons"
-                        font.pixelSize: 20
-                        color: modelData.connected ? pywal.color2 : pywal.foreground
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 300; easing.type: Easing.OutCubic }
-                        }
-                    }
-                    
-                    // Device info
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-                        
-                        Text {
-                            Layout.fillWidth: true
-                            text: modelData.name
-                            font.family: "Inter"
-                            font.pixelSize: 13
-                            font.weight: Font.Medium
-                            color: pywal.foreground
-                            elide: Text.ElideRight
-                        }
-                        
-                        Text {
-                            text: {
-                                if (deviceItem.isConnecting) return "Connecting..."
-                                if (deviceItem.isDisconnecting) return "Disconnecting..."
-                                if (modelData.connected) return "Connected"
-                                if (modelData.bonded) return "Paired"
-                                return "Available"
-                            }
-                            font.family: "Inter"
-                            font.pixelSize: 11
-                            color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.6)
-                        }
-                    }
-                    
-                    // Connect/Disconnect button
                     Rectangle {
-                        Layout.preferredWidth: 36
-                        Layout.preferredHeight: 36
-                        radius: 18
+                        width: 32
+                        height: 32
+                        radius: 10
+                        color: Qt.rgba(cPrimary.r, cPrimary.g, cPrimary.b, 0.1)
                         
-                        color: modelData.connected 
-                            ? Qt.rgba(pywal.color1.r, pywal.color1.g, pywal.color1.b, 0.2)
-                            : Qt.rgba(pywal.color2.r, pywal.color2.g, pywal.color2.b, 0.2)
-                        
-                        Behavior on color {
-                            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
-                        }
-                        
-                        // Loading spinner when connecting/disconnecting
-                        Rectangle {
-                            visible: deviceItem.isConnecting || deviceItem.isDisconnecting
+                        Text {
                             anchors.centerIn: parent
+                            text: "󰂯"
+                            font.family: "Material Design Icons"
+                            font.pixelSize: 18
+                            color: cPrimary
+                        }
+                    }
+                    
+                    Text {
+                        text: "Bluetooth"
+                        font.family: "Inter"
+                        font.pixelSize: 16
+                        font.weight: Font.Bold
+                        color: cText
+                        Layout.fillWidth: true
+                    }
+                    
+                    // Toggle Switch
+                    Rectangle {
+                        Layout.preferredWidth: 44
+                        Layout.preferredHeight: 24
+                        radius: 12
+                        color: adapter?.enabled ? cPrimary : Qt.rgba(cText.r, cText.g, cText.b, 0.1)
+                        
+                        Behavior on color { ColorAnimation { duration: 200 } }
+                        
+                        Rectangle {
                             width: 20
                             height: 20
                             radius: 10
-                            color: "transparent"
-                            border.color: pywal.foreground
-                            border.width: 2
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: adapter?.enabled ? parent.width - width - 2 : 2
+                            color: "white"
                             
-                            Rectangle {
-                                width: parent.width
-                                height: parent.height / 2
-                                anchors.top: parent.top
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                color: pywal.background
-                            }
-                            
-                            NumberAnimation on rotation {
-                                running: deviceItem.isConnecting || deviceItem.isDisconnecting
-                                from: 0
-                                to: 360
-                                duration: 1200
-                                loops: Animation.Infinite
-                                easing.type: Easing.Linear
-                            }
-                        }
-                        
-                        Text {
-                            visible: !deviceItem.isConnecting && !deviceItem.isDisconnecting
-                            anchors.centerIn: parent
-                            text: modelData.connected ? "󰌊" : "󰌘"  // link-off vs link
-                            font.family: "Material Design Icons"
-                            font.pixelSize: 18
-                            color: modelData.connected ? pywal.color1 : pywal.color2
+                            Behavior on x { SpringAnimation { spring: 4; damping: 0.4 } }
                         }
                         
                         MouseArea {
                             anchors.fill: parent
-                            enabled: !deviceItem.isConnecting && !deviceItem.isDisconnecting
-                            onClicked: {
-                                modelData.connected = !modelData.connected
-                            }
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: if (adapter) adapter.enabled = !adapter.enabled
                         }
                     }
                 }
                 
-                // Appear animation
-                opacity: 0
-                scale: 0.9
-                
-                Component.onCompleted: {
-                    opacity = 1
-                    scale = 1
+                // Scan Button
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 36
+                    radius: 10
+                    color: scanArea.containsMouse ? Qt.rgba(cPrimary.r, cPrimary.g, cPrimary.b, 0.1) : Qt.rgba(cText.r, cText.g, cText.b, 0.03)
+                    
+                    Behavior on color { ColorAnimation { duration: 150 } }
+                    
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 8
+                        
+                        Text {
+                            text: adapter?.discovering ? "󰑐" : "󰑓"
+                            font.family: "Material Design Icons"
+                            font.pixelSize: 16
+                            color: adapter?.discovering ? cPrimary : cText
+                            
+                            RotationAnimation on rotation {
+                                running: adapter?.discovering ?? false
+                                from: 0; to: 360; duration: 1000; loops: Animation.Infinite
+                            }
+                        }
+                        
+                        Text {
+                            text: adapter?.discovering ? "Scanning..." : "Scan for devices"
+                            font.family: "Inter"
+                            font.pixelSize: 13
+                            font.weight: Font.Medium
+                            color: cText
+                        }
+                    }
+                    
+                    MouseArea {
+                        id: scanArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: if (adapter) adapter.discovering = !adapter.discovering
+                    }
                 }
                 
-                Behavior on opacity {
-                    NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                // Device List
+                ListView {
+                    id: deviceList
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Math.min(contentHeight, 320)
+                    spacing: 4
+                    clip: true
+                    model: devices
+                    
+                    delegate: Rectangle {
+                        id: deviceItem
+                        width: deviceList.width
+                        height: 56
+                        radius: 12
+                        color: itemArea.containsMouse ? cHover : "transparent"
+                        
+                        Behavior on color { ColorAnimation { duration: 100 } }
+                        
+                        required property var modelData
+                        property bool isConnected: modelData.connected
+                        
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 12
+                            
+                            // Icon
+                            Text {
+                                text: {
+                                    const icon = modelData.icon || "generic"
+                                    if (icon.includes("audio")) return "󰋋"
+                                    if (icon.includes("phone")) return "󰄜"
+                                    if (icon.includes("computer")) return "󰌢"
+                                    if (icon.includes("mouse")) return "󰍽"
+                                    if (icon.includes("keyboard")) return "󰌌"
+                                    return "󰂯"
+                                }
+                                font.family: "Material Design Icons"
+                                font.pixelSize: 20
+                                color: isConnected ? cPrimary : cSubText
+                            }
+                            
+                            // Info
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+                                
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: modelData.name
+                                    font.family: "Inter"
+                                    font.pixelSize: 13
+                                    font.weight: Font.Medium
+                                    color: cText
+                                    elide: Text.ElideRight
+                                }
+                                
+                                Text {
+                                    text: {
+                                        if (modelData.state === BluetoothDeviceState.Connecting) return "Connecting..."
+                                        if (isConnected) return "Connected"
+                                        if (modelData.bonded) return "Paired"
+                                        return "Available"
+                                    }
+                                    font.family: "Inter"
+                                    font.pixelSize: 11
+                                    color: isConnected ? cPrimary : cSubText
+                                }
+                            }
+                            
+                            // Action Button
+                            Rectangle {
+                                Layout.preferredWidth: 32
+                                Layout.preferredHeight: 32
+                                radius: 16
+                                color: actionArea.containsMouse ? Qt.rgba(cText.r, cText.g, cText.b, 0.1) : "transparent"
+                                border.color: isConnected ? cPrimary : Qt.rgba(cText.r, cText.g, cText.b, 0.2)
+                                border.width: 1
+                                
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: isConnected ? "󰌊" : "󰌘"
+                                    font.family: "Material Design Icons"
+                                    font.pixelSize: 16
+                                    color: isConnected ? cPrimary : cSubText
+                                }
+                                
+                                MouseArea {
+                                    id: actionArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: modelData.connected = !modelData.connected
+                                }
+                            }
+                        }
+                        
+                        MouseArea {
+                            id: itemArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            z: -1 // Let action button take priority
+                        }
+                    }
                 }
                 
-                Behavior on scale {
-                    NumberAnimation { duration: 250; easing.type: Easing.OutBack }
+                // Empty State
+                Item {
+                    visible: devices.length === 0
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 120
+                    
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        spacing: 8
+                        
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "󰂲"
+                            font.family: "Material Design Icons"
+                            font.pixelSize: 36
+                            color: Qt.rgba(cText.r, cText.g, cText.b, 0.2)
+                        }
+                        
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: adapter?.enabled ? "No devices found" : "Bluetooth is disabled"
+                            font.family: "Inter"
+                            font.pixelSize: 13
+                            color: cSubText
+                        }
+                    }
+                }
+                
+                // Footer / Settings Link
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 1
+                    color: cBorder
+                }
+                
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 32
+                    radius: 8
+                    color: settingsArea.containsMouse ? cHover : "transparent"
+                    
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 6
+                        
+                        Text {
+                            text: "Bluetooth Settings"
+                            font.family: "Inter"
+                            font.pixelSize: 12
+                            color: cSubText
+                        }
+                        
+                        Text {
+                            text: "󰅂"
+                            font.family: "Material Design Icons"
+                            font.pixelSize: 14
+                            color: cSubText
+                        }
+                    }
+                    
+                    MouseArea {
+                        id: settingsArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            // Launch system bluetooth settings
+                            // Adjust command based on user's DE/tools (e.g., blueman-manager, gnome-control-center)
+                            Quickshell.process.exec("blueman-manager") 
+                        }
+                    }
                 }
             }
         }
-        
-        // Empty state
-        Item {
-            visible: devices.length === 0
-            Layout.fillWidth: true
-            Layout.preferredHeight: 100
-            
-            ColumnLayout {
-                anchors.centerIn: parent
-                spacing: 8
-                
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "󰂲"
-                    font.family: "Material Design Icons"
-                    font.pixelSize: 32
-                    color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.3)
-                }
-                
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: adapter?.enabled ? "No devices found" : "Bluetooth is disabled"
-                    font.family: "Inter"
-                    font.pixelSize: 12
-                    color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.5)
-                }
-            }
-        }
-            } // contentColumn
-        } // backgroundRect
-    } // container
+    }
 }

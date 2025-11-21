@@ -177,6 +177,8 @@ Singleton {
         }
         
         function close() {
+            if (closed) return;
+            
             // Mark as closed but keep in history for notification center
             closed = true;
             

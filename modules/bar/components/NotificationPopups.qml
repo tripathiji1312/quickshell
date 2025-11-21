@@ -150,7 +150,7 @@ PanelWindow {
                     Rectangle {
                         id: cardBg
                         width: parent.width
-                        height: contentLayout.implicitHeight + 
+                        height: contentLayout.implicitHeight + 28
                         radius: 12
                         
                         // Glassmorphic surface
