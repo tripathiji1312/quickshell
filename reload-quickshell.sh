@@ -1,28 +1,25 @@
 #!/bin/bash
-# Quick reload script for QuickShell
+# Reload QuickShell
 
-echo "🔄 Reloading QuickShell..."
-
-# Kill existing instance
-pkill -9 quickshell
-sleep 1
+# Kill existing instance gracefully first, then force if needed
+if pgrep -x quickshell > /dev/null; then
+    echo "Stopping QuickShell..."
+    pkill quickshell
+    # Wait up to 5 seconds
+    for i in {1..50}; do
+        if ! pgrep -x quickshell > /dev/null; then
+            break
+        fi
+        sleep 0.1
+    done
+    # Force kill if still running
+    if pgrep -x quickshell > /dev/null; then
+        pkill -9 quickshell
+    fi
+fi
 
 # Start new instance
-quickshell &
-NEW_PID=$!
+echo "Starting QuickShell..."
+nohup quickshell > /dev/null 2>&1 &
 
-sleep 2
-
-if pgrep -x quickshell > /dev/null; then
-    echo "✅ QuickShell reloaded successfully (PID: $NEW_PID)"
-    echo ""
-    echo "📋 To see the changes:"
-    echo "  1. Click the Control Center icon in your bar (top-right)"
-    echo "  2. Check Performance tab - should be much more compact (3 columns)"
-    echo "  3. Check Settings tab - Bluetooth device name should be beside icon"
-    echo "  4. Check Notifications tab - closed notifications should persist"
-    echo "  5. Check Settings tab - Volume should show percentage without NaN"
-else
-    echo "❌ Failed to start QuickShell"
-    echo "Try running: quickshell"
-fi
+echo "Done."
