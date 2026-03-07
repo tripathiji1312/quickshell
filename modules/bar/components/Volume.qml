@@ -13,10 +13,9 @@ Item {
     
     readonly property var pywal: QsServices.Pywal
     readonly property var audio: QsServices.Audio
-    readonly property var volumeMonitor: QsServices.VolumeMonitor
     readonly property bool isHovered: mouseArea.containsMouse
-    readonly property bool isMuted: volumeMonitor.muted
-    readonly property int percentage: volumeMonitor.percentage
+    readonly property bool isMuted: audio.muted
+    readonly property int percentage: audio.percentage
     
     implicitWidth: volumeRow.implicitWidth
     implicitHeight: 20
@@ -115,7 +114,7 @@ Item {
     
     // Volume change pulse
     Connections {
-        target: volumeMonitor
+        target: audio
         function onPercentageChanged() {
             pulseAnim.restart()
         }

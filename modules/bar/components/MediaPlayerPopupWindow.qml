@@ -3,6 +3,7 @@ import Quickshell.Wayland
 import QtQuick 6.10
 import QtQuick.Layouts 6.10
 import qs.services
+import "../../../services" as QsServices
 
 PanelWindow {
     id: popupWindow
@@ -300,21 +301,21 @@ PanelWindow {
         
         onEntered: {
             popupWindow.isHovered = true
-            console.log("Popup hover entered - isHovered:", true)
+            QsServices.Logger.debug("MediaPlayerPopupWindow", "Hover entered")
         }
         
         onExited: {
             popupWindow.isHovered = false
-            console.log("Popup hover exited - isHovered:", false)
+            QsServices.Logger.debug("MediaPlayerPopupWindow", "Hover exited")
         }
     }
     
     onShouldShowChanged: {
-        console.log("Popup shouldShow changed to:", shouldShow)
+        QsServices.Logger.debug("MediaPlayerPopupWindow", `shouldShow: ${shouldShow}`)
     }
     
     onIsHoveredChanged: {
-        console.log("Popup isHovered changed to:", isHovered)
+        QsServices.Logger.debug("MediaPlayerPopupWindow", `isHovered: ${isHovered}`)
     }
     
     function formatTime(seconds) {

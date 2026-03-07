@@ -3,20 +3,24 @@ pragma Singleton
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Services.Notifications
+import "." as QsServices
 
 Singleton {
     id: root
 
-    property list<Notif> notifications: []
-    readonly property var activeNotifications: notifications.filter(n => !n.closed)
+    // Use a JS array so Array helpers (filter/slice/etc) work reliably.
+    property var notifications: []
+    readonly property var activeNotifications: notifications.filter(n => !!n && !n.closed)
     
     // Maximum notifications to keep in memory (lowercase to comply with QML naming rules)
     readonly property int maxNotifications: 100
     
     // Show all notifications from past 24 hours (including closed ones) - for notification center
     readonly property var recentNotifications: notifications.filter(n => {
-        const hoursSinceNotif = (new Date().getTime() - n.timestamp.getTime()) / (1000 * 60 * 60);
-        return hoursSinceNotif < 24;
+        if (!n || !n.timestamp)
+            return false
+        const hoursSinceNotif = (new Date().getTime() - n.timestamp.getTime()) / (1000 * 60 * 60)
+        return hoursSinceNotif < 24
     }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
     
     // Group notifications by app for better UX
@@ -56,12 +60,10 @@ Singleton {
         onTriggered: {
             const oneDayAgo = new Date().getTime() - (24 * 60 * 60 * 1000)
             const oldCount = root.notifications.length
-            root.notifications = root.notifications.filter(n => 
-                n.timestamp.getTime() > oneDayAgo
-            )
+            root.notifications = root.notifications.filter(n => n && n.timestamp && n.timestamp.getTime() > oneDayAgo)
             const cleaned = oldCount - root.notifications.length
             if (cleaned > 0) {
-                console.log("🧹 [Notifs] Cleaned up", cleaned, "old notifications")
+                QsServices.Logger.debug("Notifs", `Cleaned up ${cleaned} old notifications`)
             }
         }
     }
@@ -69,38 +71,63 @@ Singleton {
     // Add notification from external NotificationServer
     function addNotification(notif) {
         // Check DND mode
-        if (dnd && notif.urgency < 2) {
-            console.log("� [Notifs Service] DND active - suppressing notification:", notif.summary);
+        if (dnd && notif.urgency !== NotificationUrgency.Critical) {
+            QsServices.Logger.debug("Notifs", `DND active - suppressing: ${notif.summary}`)
             return;
         }
-        
-        console.log("�📬 [Notifs Service] Adding notification:", notif.summary);
+
+        QsServices.Logger.debug("Notifs", `Adding notification: ${notif.summary}`)
         
         const notifWrapper = notifComponent.createObject(root, {
             notification: notif
-        });
+        })
+
+        if (!notifWrapper) {
+            QsServices.Logger.error("Notifs", "Failed to create notification wrapper")
+            return
+        }
         
         // Cap maximum notifications to prevent memory leaks
-        root.notifications = [notifWrapper, ...root.notifications].slice(0, root.maxNotifications);
-        console.log("📋 Total notifications:", root.notifications.length);
+        root.notifications = [notifWrapper, ...root.notifications].slice(0, root.maxNotifications)
+        QsServices.Logger.debug("Notifs", `Total notifications: ${root.notifications.length}`)
+        QsServices.Logger.debug("Notifs", `Queued: ${notifWrapper.appName ?? ""} ${notifWrapper.summary ?? ""}`)
+    }
+
+    function _actionsToArray(actionList) {
+        const out = []
+        if (!actionList)
+            return out
+
+        const len = actionList.length ?? 0
+        for (let i = 0; i < len; i++) {
+            const a = actionList[i]
+            if (!a)
+                continue
+            out.push({
+                identifier: a.identifier,
+                text: a.text,
+                invoke: () => a.invoke()
+            })
+        }
+        return out
     }
     
     // Toggle DND mode
     function toggleDnd() {
         dnd = !dnd;
-        console.log("🔕 [Notifs Service] DND mode:", dnd ? "enabled" : "disabled");
+        QsServices.Logger.info("Notifs", `DND mode: ${dnd ? "enabled" : "disabled"}`)
     }
     
     // Clear all notifications
     function clearAll() {
         notifications.forEach(n => n.close());
-        console.log("🧹 [Notifs Service] All notifications cleared");
+        QsServices.Logger.info("Notifs", "All notifications cleared")
     }
     
     // Clear notifications from specific app
     function clearApp(appName) {
         notifications.filter(n => n.appName === appName).forEach(n => n.close());
-        console.log("🧹 [Notifs Service] Cleared notifications from:", appName);
+        QsServices.Logger.info("Notifs", `Cleared notifications from: ${appName}`)
     }
 
     // Notification wrapper component
@@ -113,14 +140,15 @@ Singleton {
         property bool hasAnimated: false  // Track if popup animation has played
         
         // Notification properties
-        property string id: ""
+        property string notifId: ""
         property string summary: ""
         property string body: ""
         property string appName: ""
         property string appIcon: ""
         property string image: ""
-        property int urgency: 0
-        property list<var> actions: []
+        property int urgency: NotificationUrgency.Normal
+        // Use a JS array so `.length`/indexing and helpers work reliably.
+        property var actions: []
         
         // Time formatting
         readonly property string timeString: {
@@ -168,11 +196,7 @@ Singleton {
             }
             
             function onActionsChanged() {
-                notifWrapper.actions = notifWrapper.notification.actions.map(a => ({
-                    identifier: a.identifier,
-                    text: a.text,
-                    invoke: () => a.invoke()
-                }));
+                notifWrapper.actions = root._actionsToArray(notifWrapper.notification.actions)
             }
         }
         
@@ -186,8 +210,8 @@ Singleton {
             if (notification) {
                 notification.dismiss();
             }
-            
-            console.log("📋 [Notifs] Notification closed but kept in history:", summary);
+
+            QsServices.Logger.debug("Notifs", `Notification closed (kept in history): ${summary}`)
         }
         
         function invokeAction(actionId) {
@@ -201,18 +225,14 @@ Singleton {
             if (!notification)
                 return;
             
-            id = notification.id;
-            summary = notification.summary;
-            body = notification.body;
-            appName = notification.appName;
-            appIcon = notification.appIcon;
-            image = notification.image;
-            urgency = notification.urgency;
-            actions = notification.actions.map(a => ({
-                identifier: a.identifier,
-                text: a.text,
-                invoke: () => a.invoke()
-            }));
+            notifId = `${notification.id}`
+            summary = notification.summary
+            body = notification.body
+            appName = notification.appName
+            appIcon = notification.appIcon
+            image = notification.image
+            urgency = notification.urgency
+            actions = root._actionsToArray(notification.actions)
         }
     }
     
@@ -230,7 +250,7 @@ Singleton {
                 notif.notification.dismiss();
             }
             notif.destroy();
-            console.log("🗑️ [Notifs] Notification permanently deleted");
+            QsServices.Logger.debug("Notifs", "Notification permanently deleted")
         }
     }
 }

@@ -1,0 +1,20 @@
+{
+  "appearance": {
+    "fontFamily": "Inter",
+    "materialIconFont": "Material Design Icons"
+  },
+  "paths": {
+    "pywalColors": "~/.cache/wal/colors.json",
+    "screenshotsDir": "~/Pictures/Screenshots"
+  },
+  "osd": {
+    "volumeTimeoutMs": 2000,
+    "brightnessTimeoutMs": 2000
+  },
+  "notifications": {
+    "popupWidth": 340,
+    "maxVisible": 5,
+    "timeoutMs": 7000,
+    "registerServer": true
+  }
+}

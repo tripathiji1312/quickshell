@@ -3,6 +3,8 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick 6.10
+import "../config" as QsConfig
+import "." as QsServices
 
 Singleton {
     id: root
@@ -112,18 +114,19 @@ Singleton {
                 if (data.colors.color14) root.color14 = data.colors.color14;
                 if (data.colors.color15) root.color15 = data.colors.color15;
             }
-            console.log("Pywal colors loaded successfully");
+            QsServices.Logger.debug("Pywal", "colors.json loaded")
         } catch (e) {
-            console.error("Failed to parse pywal colors:", e);
+            QsServices.Logger.error("Pywal", "Failed to parse colors.json", e?.message ?? e)
         }
     }
     
     // Load colors from pywal cache
     FileView {
         id: pywalFile
-        path: "/home/tripathiji/.cache/wal/colors.json"
+        path: QsConfig.Config.paths.pywalColors
         watchChanges: true
         onLoaded: root.loadColors(text())
         onFileChanged: root.loadColors(text())
+        onLoadFailed: err => QsServices.Logger.warn("Pywal", `colors.json not loaded: ${FileViewError.toString(err)}`)
     }
 }

@@ -2,6 +2,7 @@ pragma Singleton
 
 import Quickshell
 import QtQuick
+import "." as QsServices
 
 // Centralized UI state management
 Singleton {
@@ -70,9 +71,6 @@ Singleton {
     }
     
     Component.onCompleted: {
-        console.log("🎛️ [UIState] Service initialized")
-        console.log("  DND Mode:", dndMode)
-        console.log("  Power Profile:", powerProfile)
-        console.log("  Idle Inhibited:", idleInhibited)
+        QsServices.Logger.debug("UIState", "Service initialized")
     }
 }

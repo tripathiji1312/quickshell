@@ -3,6 +3,8 @@ pragma Singleton
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
+import "../config" as QsConfig
+import "." as QsServices
 
 // Screenshot/Screen Recording Service
 Singleton {
@@ -10,7 +12,10 @@ Singleton {
     
     property bool isRecording: false
     property string lastScreenshotPath: ""
-    property string screenshotsDir: `${Quickshell.env("HOME")}/Pictures/Screenshots`
+    property string screenshotsDir: QsConfig.Config.paths.screenshotsDir
+
+    property string _slurpGeometry: ""
+    property string _windowGeomText: ""
     
     Component.onCompleted: {
         // Create screenshots directory if it doesn't exist
@@ -45,16 +50,22 @@ Singleton {
     // Get region geometry with slurp
     Process {
         id: slurpProc
+        stdout: StdioCollector {
+            onStreamFinished: root._slurpGeometry = text.trim()
+        }
         onExited: code => {
-            if (code === 0 && stdout.trim() !== "") {
+            const geometry = root._slurpGeometry
+            root._slurpGeometry = ""
+            if (code === 0 && geometry !== "") {
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
                 const filename = `screenshot-${timestamp}.png`
                 const filepath = `${root.screenshotsDir}/${filename}`
-                const geometry = stdout.trim()
-                
-                console.log("📸 [Screenshot] Capturing region:", geometry)
+
+                QsServices.Logger.debug("Screenshot", `Capturing region: ${geometry}`)
                 screenshotProc.exec(["grim", "-g", geometry, filepath])
                 root.lastScreenshotPath = filepath
+            } else if (code !== 0) {
+                QsServices.Logger.error("Screenshot", `slurp failed with code: ${code}`)
             }
         }
     }
@@ -62,18 +73,25 @@ Singleton {
     // Get active window geometry
     Process {
         id: windowGeomProc
+        stdout: StdioCollector {
+            onStreamFinished: root._windowGeomText = text.trim()
+        }
         onExited: code => {
-            if (code === 0 && stdout.trim() !== "") {
+            const out = root._windowGeomText
+            root._windowGeomText = ""
+            if (code === 0 && out !== "") {
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
                 const filename = `screenshot-${timestamp}.png`
                 const filepath = `${root.screenshotsDir}/${filename}`
-                const parts = stdout.trim().split(' ')
+                const parts = out.split(' ')
                 if (parts.length === 4) {
                     const geometry = `${parts[0]},${parts[1]} ${parts[2]}x${parts[3]}`
-                    console.log("📸 [Screenshot] Capturing window:", geometry)
+                    QsServices.Logger.debug("Screenshot", `Capturing window: ${geometry}`)
                     screenshotProc.exec(["grim", "-g", geometry, filepath])
                     root.lastScreenshotPath = filepath
                 }
+            } else if (code !== 0) {
+                QsServices.Logger.error("Screenshot", `window geometry failed with code: ${code}`)
             }
         }
     }
@@ -82,7 +100,7 @@ Singleton {
         id: screenshotProc
         onExited: code => {
             if (code === 0) {
-                console.log("📸 [Screenshot] Saved:", root.lastScreenshotPath)
+                QsServices.Logger.info("Screenshot", `Saved: ${root.lastScreenshotPath}`)
                 
                 // Copy to clipboard using wl-copy with shell redirection
                 clipboardProc.exec(["sh", "-c", `wl-copy < "${root.lastScreenshotPath}"`])
@@ -94,7 +112,7 @@ Singleton {
                     `Saved and copied to clipboard`
                 ])
             } else {
-                console.error("📸 [Screenshot] Failed with code:", code)
+                QsServices.Logger.error("Screenshot", `Failed with code: ${code}`)
             }
         }
     }
@@ -122,7 +140,7 @@ Singleton {
         ])
         
         root.isRecording = true
-        console.log("🎬 [Screenshot] Recording started")
+        QsServices.Logger.info("Screenshot", "Recording started")
     }
     
     Process {
@@ -130,7 +148,7 @@ Singleton {
         onExited: code => {
             root.isRecording = false
             if (code === 0) {
-                console.log("🎬 [Screenshot] Recording saved")
+                QsServices.Logger.info("Screenshot", "Recording saved")
                 notifyProc.exec([
                     "notify-send",
                     "Screen recording saved",
@@ -162,8 +180,8 @@ Singleton {
     
     function copyLastScreenshot() {
         if (!lastScreenshotPath) return
-        
-        copyProc.exec(["wl-copy", "<", lastScreenshotPath])
+
+        copyProc.exec(["sh", "-c", `wl-copy < "${lastScreenshotPath}"`])
     }
     
     Process {
@@ -180,7 +198,7 @@ Singleton {
         id: deleteProc
         onExited: code => {
             if (code === 0) {
-                console.log("📸 [Screenshot] Deleted:", root.lastScreenshotPath)
+                QsServices.Logger.info("Screenshot", `Deleted: ${root.lastScreenshotPath}`)
                 root.lastScreenshotPath = ""
             }
         }

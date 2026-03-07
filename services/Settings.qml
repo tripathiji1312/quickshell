@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick 6.10
 import Quickshell
 import Quickshell.Io
+import "." as QsServices
 
 // Quick Settings Persistence Service
 Singleton {
@@ -35,7 +36,7 @@ Singleton {
                     root.focusModeEnabled = settings.focusModeEnabled ?? false
                     root.focusModeMinutesLeft = settings.focusModeMinutesLeft ?? 0
                 } catch(e) {
-                    console.warn("Failed to load settings:", e)
+                    QsServices.Logger.warn("Settings", `Failed to load: ${e?.message ?? e}`)
                 }
             }
         }

@@ -6,7 +6,9 @@ import Quickshell
 import Quickshell.Services.Notifications
 import QtQuick 6.10
 import "services" as QsServices
+import "config" as QsConfig
 import "modules/osd"
+import "modules"
 
 ShellRoot {
     id: root
@@ -17,25 +19,23 @@ ShellRoot {
     readonly property var audio: QsServices.Audio
     readonly property var brightness: QsServices.Brightness
     
-    // Direct NotificationServer to ensure it starts
-    NotificationServer {
-        id: notificationServer
-        
-        keepOnReload: false
-        actionsSupported: true
-        bodyHyperlinksSupported: true
-        bodyMarkupSupported: true
-        imageSupported: true
-        persistenceSupported: true
-        
-        onNotification: notif => {
-            console.log("📬 [ShellRoot] Notification received:", notif.appName, notif.summary);
-            notif.tracked = true;
-            notifs.addNotification(notif);
-        }
-        
-        Component.onCompleted: {
-            console.log("🔔 NotificationServer registered on D-Bus");
+    // Only register as a notification daemon if explicitly enabled.
+    // This avoids noisy warnings when another daemon is active.
+    Loader {
+        active: QsConfig.Config.notifications.registerServer
+        sourceComponent: NotificationServer {
+            keepOnReload: false
+            actionsSupported: true
+            bodyHyperlinksSupported: true
+            bodyMarkupSupported: true
+            imageSupported: true
+            persistenceSupported: true
+
+            onNotification: notif => {
+                notif.tracked = true
+                QsServices.Logger.debug("Notifs", `Received: ${notif.appName ?? ""} ${notif.summary ?? ""}`)
+                notifs.addNotification(notif)
+            }
         }
     }
     
@@ -55,7 +55,9 @@ ShellRoot {
         pywal: root.pywal
     }
 
+    BatteryMonitor {}
+
     Component.onCompleted: {
-        console.log("QuickShell loaded successfully!")
+        QsServices.Logger.info("Shell", "Loaded")
     }
 }

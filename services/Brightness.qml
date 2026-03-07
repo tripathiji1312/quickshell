@@ -14,33 +14,48 @@ Singleton {
     readonly property real level: brightness
     readonly property int percentage: Math.round(brightness * 100)
     
-    // Updated backlight path
-    readonly property string backlightPath: "/sys/class/backlight/amdgpu_bl1/brightness"
-    readonly property string maxBrightnessPath: "/sys/class/backlight/amdgpu_bl1/max_brightness"
+    property string _backlightDevice: ""
+    readonly property string backlightPath: _backlightDevice !== "" ? `/sys/class/backlight/${_backlightDevice}/brightness` : ""
+    readonly property string maxBrightnessPath: _backlightDevice !== "" ? `/sys/class/backlight/${_backlightDevice}/max_brightness` : ""
     
     property int currentValue: 0
     property int maxValue: 255
     
     Component.onCompleted: {
+        detectBacklightDevice()
         readMaxBrightness()
         readBrightness()
         updateTimer.start()
     }
-    
-    function readMaxBrightness() {
-        maxBrightnessProcess.running = true
+
+    function detectBacklightDevice() {
+        detectProc.running = true
     }
     
+    function readMaxBrightness() {
+        if (maxBrightnessPath === "") return
+        maxBrightnessProcess.command = ["/bin/cat", maxBrightnessPath]
+        maxBrightnessProcess.running = true
+    }
+
     function readBrightness() {
+        if (backlightPath === "") return
+        brightnessProcess.command = ["/bin/cat", backlightPath]
         brightnessProcess.running = true
     }
     
     function setBrightness(value) {
         // Clamp between 0 and 1
         const newValue = Math.max(0, Math.min(1, value))
-        
-        // Use brightnessctl for AMD
-        const cmd = "brightnessctl set " + Math.round(newValue * 100) + "% && cat " + backlightPath
+
+        if (backlightPath === "")
+            return
+
+        // Use brightnessctl when available (works for most backlight devices)
+        // Fallback to sysfs write when brightnessctl isn't present.
+        const percent = Math.round(newValue * 100)
+        const sysfsValue = Math.round(newValue * maxValue)
+        const cmd = `brightnessctl set ${percent}% || echo ${sysfsValue} | sudo tee "${backlightPath}" >/dev/null; cat "${backlightPath}"`
         setBrightnessProcess.command = ["/bin/sh", "-c", cmd]
         setBrightnessProcess.running = true
         
@@ -57,8 +72,27 @@ Singleton {
     
     // Read max brightness
     Process {
+        id: detectProc
+        command: ["/bin/sh", "-c", "ls -1 /sys/class/backlight 2>/dev/null | head -n 1"]
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const dev = text.trim()
+                if (dev.length > 0) {
+                    root._backlightDevice = dev
+                } else {
+                    root._backlightDevice = ""
+                }
+
+                readMaxBrightness()
+                readBrightness()
+            }
+        }
+    }
+
+    Process {
         id: maxBrightnessProcess
-        command: ["/bin/cat", maxBrightnessPath]
         running: false
         
         stdout: SplitParser {
@@ -74,7 +108,6 @@ Singleton {
     // Read current brightness
     Process {
         id: brightnessProcess
-        command: ["/bin/cat", backlightPath]
         running: false
         
         stdout: SplitParser {

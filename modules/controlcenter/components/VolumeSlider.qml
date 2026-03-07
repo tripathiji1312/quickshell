@@ -11,12 +11,9 @@ Rectangle {
     required property var audio
     property var pywal
     
-    // Use VolumeMonitor for reliable volume reading (same as bar)
-    readonly property var volumeMonitor: QsServices.VolumeMonitor
-    
-    // Current volume value - use VolumeMonitor for reliability
-    readonly property int currentVolume: volumeMonitor.percentage
-    readonly property bool isMuted: volumeMonitor.muted
+    // Current volume value - use PipeWire audio service
+    readonly property int currentVolume: audio.percentage
+    readonly property bool isMuted: audio.muted
     
     // Solid color tokens
     readonly property color surfaceColor: pywal ? Qt.lighter(pywal.background, 1.25) : "#2a2a3a"

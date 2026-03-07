@@ -20,7 +20,17 @@ RowLayout {
                 anchors.centerIn: parent
                 width: 16
                 height: 16
-                source: modelData.icon
+                source: {
+                    const icon = modelData.icon ?? ""
+                    if (typeof icon === "string" && icon.includes("?path=")) {
+                        const parts = icon.split("?path=")
+                        const name = parts[0]
+                        const base = parts[1] ?? ""
+                        const fileName = name.slice(name.lastIndexOf("/") + 1)
+                        return Qt.resolvedUrl(`${base}/${fileName}`)
+                    }
+                    return icon
+                }
                 visible: status === Image.Ready
             }
             

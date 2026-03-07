@@ -66,7 +66,7 @@ Item {
         cursorShape: Qt.PointingHandCursor
         
         onClicked: {
-            console.log("Power button clicked - executing shutdown")
+            Services.Logger.info("PowerButton", "Executing shutdown")
             // Execute shutdown command
             Quickshell.execDetached(["systemctl", "poweroff"])
         }

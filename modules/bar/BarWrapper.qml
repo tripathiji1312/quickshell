@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Wayland
 import QtQuick 6.10
 import "../../config" as QsConfig
+import "../../services" as QsServices
 
 Scope {
     readonly property var config: QsConfig.Config
@@ -55,15 +56,15 @@ Scope {
         property var controlCenter: item
         
         onStatusChanged: {
-            console.log("🎛️ [BarWrapper] Control Center loader status:", 
-                       status === Loader.Ready ? "READY" : 
-                       status === Loader.Loading ? "LOADING" : 
-                       status === Loader.Error ? "ERROR" : "NULL")
+            QsServices.Logger.debug(
+                "BarWrapper",
+                `Control Center loader status: ${status === Loader.Ready ? "READY" : status === Loader.Loading ? "LOADING" : status === Loader.Error ? "ERROR" : "NULL"}`
+            )
             if (status === Loader.Error) {
-                console.error("🎛️ [BarWrapper] Control Center failed to load!")
+                QsServices.Logger.error("BarWrapper", "Control Center failed to load")
             }
             if (status === Loader.Ready) {
-                console.log("🎛️ [BarWrapper] Control Center loaded successfully, item:", item ? "EXISTS" : "NULL")
+                QsServices.Logger.debug("BarWrapper", `Control Center loaded, item: ${item ? "EXISTS" : "NULL"}`)
             }
         }
     }

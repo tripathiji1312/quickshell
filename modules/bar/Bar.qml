@@ -426,6 +426,7 @@ Item {
                             restoreMode: Binding.RestoreBinding
                         }
                     }
+
                     
                     // System Tray (only if has items)
                     Loader {

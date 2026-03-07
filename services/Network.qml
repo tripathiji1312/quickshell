@@ -3,6 +3,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "." as QsServices
 
 Singleton {
     id: root
@@ -17,53 +18,10 @@ Singleton {
     readonly property string ssid: active?.ssid ?? "Not Connected"
     readonly property int signalStrength: active?.signalStrength ?? 0
     
-    // Bluetooth properties with actual bluetooth status
-    property bool bluetoothConnected: false
-    property string bluetoothDeviceName: "Not Connected"
-    property string bluetoothDeviceAddress: ""
-    
     property var savedNetworks: []
-    
-    // Update bluetooth status
-    function updateBluetoothStatus() {
-        bluetoothStatusProc.running = true
-    }
     
     // Consumer visibility control - set to false to pause polling when UI is hidden
     property bool pollingActive: true
-    
-    // Timer to periodically check Bluetooth (only when active)
-    Timer {
-        id: bluetoothTimer
-        interval: 5000 // Check every 5 seconds
-        running: root.pollingActive
-        repeat: true
-        onTriggered: root.updateBluetoothStatus()
-    }
-    
-    // Process to check Bluetooth connection status
-    Process {
-        id: bluetoothStatusProc
-        command: ["bluetoothctl", "devices", "Connected"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const lines = text.trim().split('\n').filter(line => line.length > 0)
-                if (lines.length > 0 && lines[0].startsWith('Device')) {
-                    // Parse: "Device AA:BB:CC:DD:EE:FF Device Name"
-                    const parts = lines[0].split(' ')
-                    if (parts.length >= 3) {
-                        root.bluetoothDeviceAddress = parts[1]
-                        root.bluetoothDeviceName = parts.slice(2).join(' ')
-                        root.bluetoothConnected = true
-                    }
-                } else {
-                    root.bluetoothConnected = false
-                    root.bluetoothDeviceName = "Not Connected"
-                    root.bluetoothDeviceAddress = ""
-                }
-            }
-        }
-    }
 
     function enableWifi(enabled: bool): void {
         const cmd = enabled ? "on" : "off";
@@ -82,7 +40,7 @@ Singleton {
     function connectToNetwork(ssid: string, password: string): void {
         // Validate SSID to prevent command injection
         if (!ssid || ssid.trim().length === 0) {
-            console.error("❌ [Network] Invalid SSID: empty")
+            QsServices.Logger.warn("Network", "Invalid SSID: empty")
             return
         }
         
@@ -90,12 +48,12 @@ Singleton {
         const dangerousChars = [";", "`", "$", "|", "&", "\n", "\r", "\\"]
         for (let i = 0; i < dangerousChars.length; i++) {
             if (ssid.includes(dangerousChars[i])) {
-                console.error("❌ [Network] Invalid SSID: contains dangerous character")
+                QsServices.Logger.warn("Network", "Invalid SSID: contains dangerous character")
                 return
             }
         }
         
-        console.log("🌐 [Network] Connecting to:", ssid, password.length > 0 ? "(with password)" : "(saved)")
+        QsServices.Logger.info("Network", `Connecting to: ${ssid} ${password.length > 0 ? "(with password)" : "(saved)"}`)
         
         if (password && password.length > 0) {
             // Connect to new network with password
@@ -168,19 +126,19 @@ Singleton {
 
         stdout: SplitParser {
             onRead: data => {
-                console.log("🌐 [Network] Connection output:", data)
+                QsServices.Logger.debug("Network", `Connection output: ${data}`)
                 getNetworks.running = true
             }
         }
         stderr: StdioCollector {
             onStreamFinished: {
                 if (text.trim().length > 0) {
-                    console.warn("Network connection error:", text)
+                    QsServices.Logger.warn("Network", `Connection error: ${text.trim()}`)
                 }
             }
         }
         onExited: (code, status) => {
-            console.log("🌐 [Network] Connection exited with code:", code, "status:", status)
+            QsServices.Logger.debug("Network", `Connection exited code=${code} status=${status}`)
             getNetworks.running = true
         }
     }
@@ -204,14 +162,29 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.savedNetworks = text.trim().split('\n').filter(n => n.length > 0);
-                console.log("🌐 Saved networks loaded:", root.savedNetworks.length, "networks");
+                // Keep logs quiet during periodic refresh; only emit on actual changes.
+                const current = root.savedNetworks
+                const prev = root._prevSavedNetworks
+                let changed = current.length !== prev.length
+                if (!changed) {
+                    for (let i = 0; i < current.length; i++) {
+                        if (current[i] !== prev[i]) {
+                            changed = true
+                            break
+                        }
+                    }
+                }
+                if (changed) {
+                    root._prevSavedNetworks = current.slice(0)
+                    QsServices.Logger.debug("Network", `Saved networks: ${root.savedNetworks.length}`)
+                }
             }
         }
     }
+
+    property var _prevSavedNetworks: []
     
     Component.onCompleted: {
-        updateBluetoothStatus()
-        bluetoothTimer.start()
         checkSavedProc.running = true // Load saved networks on start
     }
     

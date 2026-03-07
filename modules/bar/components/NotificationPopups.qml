@@ -2,6 +2,7 @@ import QtQuick 6.10
 import QtQuick.Layouts 6.10
 import QtQuick.Effects
 import Quickshell
+import Quickshell.Services.Notifications
 import Quickshell.Wayland
 import "../../../services" as QsServices
 import "../../../config" as QsConfig
@@ -34,9 +35,22 @@ PanelWindow {
     
     // Swipe threshold (percentage of width to trigger dismiss)
     readonly property real swipeThreshold: 0.35
+
+    function _urgencyColor(u) {
+        if (u === NotificationUrgency.Critical) return root.m3Error
+        if (u === NotificationUrgency.Low) return root.m3OnSurfaceVariant
+        return root.m3Primary
+    }
+
+    function _urgencyBg(u) {
+        const c = _urgencyColor(u)
+        if (u === NotificationUrgency.Critical) return Qt.rgba(c.r, c.g, c.b, 0.10)
+        if (u === NotificationUrgency.Low) return Qt.rgba(c.r, c.g, c.b, 0.06)
+        return Qt.rgba(c.r, c.g, c.b, 0.09)
+    }
     
     // Get popups that should be shown (configurable max, newest first)
-    readonly property var activePopups: notifs.activeNotifications.slice(0, config.notifications.maxVisible)
+    readonly property var activePopups: (notifs.notifications || []).filter(n => !!n && !n.closed).slice(0, config.notifications.maxVisible)
     
     screen: Quickshell.screens[0]
     
@@ -98,6 +112,10 @@ PanelWindow {
                 property bool isExpanded: false
                 property real dragX: 0
                 property real animProgress: 0
+
+                // Timeout progress (1.0 -> 0.0). Kept separate from geometry so the
+                // timer can't instantly finish during initial layout.
+                property real timeoutProgress: 1.0
                 
                 // Animation properties for M3 expressive bounce
                 property real entranceScale: 0.7
@@ -310,18 +328,24 @@ PanelWindow {
                         }
                     }
                     
-                    Rectangle {
-                        id: cardBg
+                        Rectangle {
+                            id: cardBg
                         width: parent.width
                         height: contentLayout.implicitHeight + 28
                         radius: 20
                         
                         // Soft frosted glass surface
                         color: root.m3Surface
-                        border.width: 1
-                        border.color: notifCard.isHovered ? 
-                                     Qt.rgba(root.m3Primary.r, root.m3Primary.g, root.m3Primary.b, 0.15) : 
-                                     root.m3Border
+                            border.width: 1
+                            border.color: {
+                                if (notifCard.isHovered)
+                                    return Qt.rgba(root.m3Primary.r, root.m3Primary.g, root.m3Primary.b, 0.15)
+                                if (modelData.urgency === NotificationUrgency.Critical)
+                                    return Qt.rgba(root.m3Error.r, root.m3Error.g, root.m3Error.b, 0.18)
+                                if (modelData.urgency === NotificationUrgency.Low)
+                                    return Qt.rgba(root.m3OnSurface.r, root.m3OnSurface.g, root.m3OnSurface.b, 0.06)
+                                return root.m3Border
+                            }
                         
                         Behavior on border.color {
                             ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
@@ -355,14 +379,14 @@ PanelWindow {
                             anchors.leftMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
                             radius: 1.5
-                            visible: modelData.urgency >= 1
-                            opacity: 0.8
-                            
-                            color: modelData.urgency === 2 ? root.m3Error : root.m3Warning
+                            visible: true
+                            opacity: modelData.urgency === NotificationUrgency.Low ? 0.55 : 0.85
+
+                            color: root._urgencyColor(modelData.urgency)
                             
                             // Gentle pulse for critical only
                             SequentialAnimation on opacity {
-                                running: modelData.urgency === 2
+                                running: modelData.urgency === NotificationUrgency.Critical
                                 loops: Animation.Infinite
                                 NumberAnimation { to: 0.4; duration: 1200; easing.type: Easing.InOutQuad }
                                 NumberAnimation { to: 0.8; duration: 1200; easing.type: Easing.InOutQuad }
@@ -390,18 +414,38 @@ PanelWindow {
                                 anchors.left: parent.left
                                 anchors.top: parent.top
                                 anchors.bottom: parent.bottom
-                                width: parent.width
+                                width: progressBar.width * notifCard.timeoutProgress
                                 radius: parent.radius
-                                color: Qt.rgba(root.m3Primary.r, root.m3Primary.g, root.m3Primary.b, 0.5)
+                                color: {
+                                    const c = root._urgencyColor(modelData.urgency)
+                                    return Qt.rgba(c.r, c.g, c.b, 0.5)
+                                }
                                 
-                                NumberAnimation on width {
+                                NumberAnimation {
                                     id: progressAnim
-                                    from: progressBar.width
+                                    target: notifCard
+                                    property: "timeoutProgress"
+                                    from: 1.0
                                     to: 0
-                                    duration: config.notifications.timeout
-                                    running: notifCard.isVisible && !notifCard.isHovered && !notifCard.isDragging
+                                    duration: config.notifications.timeoutMs
+                                    running: notifCard.isVisible
                                     onFinished: if (notifCard.isVisible) notifCard.dismiss()
                                 }
+                            }
+                        }
+
+                        // Keep the timeout animation paused while hovered/dragging.
+                        Connections {
+                            target: notifCard
+
+                            function onIsHoveredChanged() {
+                                if (progressAnim.running)
+                                    progressAnim.paused = notifCard.isHovered || notifCard.isDragging
+                            }
+
+                            function onIsDraggingChanged() {
+                                if (progressAnim.running)
+                                    progressAnim.paused = notifCard.isHovered || notifCard.isDragging
                             }
                         }
                         
@@ -416,6 +460,16 @@ PanelWindow {
                             Behavior on opacity {
                                 NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
                             }
+                        }
+
+                        // Low/critical tint (keeps normal clean but distinct)
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: parent.radius
+                            color: root._urgencyBg(modelData.urgency)
+                            opacity: modelData.urgency === NotificationUrgency.Normal ? 0.0 : 1.0
+                            visible: opacity > 0
+                            z: -1
                         }
                         
                         // Main interaction area
@@ -434,17 +488,11 @@ PanelWindow {
                             
                             onEntered: {
                                 notifCard.isHovered = true
-                                // Pause progress animation
-                                progressAnim.running = false
                             }
                             
                             onExited: {
                                 if (!pressed && !isScrollSwiping) {
                                     notifCard.isHovered = false
-                                    // Resume progress if not dismissed
-                                    if (notifCard.isVisible && progressFill.width > 0) {
-                                        progressAnim.running = true
-                                    }
                                 }
                             }
                             
@@ -489,10 +537,6 @@ PanelWindow {
                                         notifCard.swipeDismiss(gestureArea.scrollAccumulator)
                                     } else {
                                         snapBackAnim.start()
-                                        // Resume progress timer
-                                        if (notifCard.isVisible && progressFill.width > 0 && !notifCard.isHovered) {
-                                            progressAnim.running = true
-                                        }
                                     }
                                     gestureArea.scrollAccumulator = 0
                                 }
@@ -539,11 +583,6 @@ PanelWindow {
                                 } else {
                                     // Snap back
                                     snapBackAnim.start()
-                                    
-                                    // Resume progress timer
-                                    if (notifCard.isVisible && progressFill.width > 0 && !notifCard.isHovered) {
-                                        progressAnim.running = true
-                                    }
                                 }
                             }
                             

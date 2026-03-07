@@ -14,15 +14,14 @@ PanelWindow {
     required property var pywal
     property bool showing: false
     
-    // Direct brightness reading with faster polling
+    // Brightness reading
     property int currentBrightness: 50
     property int prevBrightness: -1
-    
-    readonly property string backlightPath: "/sys/class/backlight/amdgpu_bl1/brightness"
-    readonly property string maxBrightnessPath: "/sys/class/backlight/amdgpu_bl1/max_brightness"
-    property int maxValue: 255
+
+    readonly property var brightnessService: QsServices.Brightness
     
     readonly property var appearance: QsConfig.AppearanceConfig
+    readonly property var config: QsConfig.Config
     
     visible: showing
     
@@ -45,54 +44,17 @@ PanelWindow {
     
     Timer {
         id: hideTimer
-        interval: 2000
+        interval: config.osd.brightnessTimeoutMs
         onTriggered: root.showing = false
     }
     
     // Fast polling for responsive OSD (100ms when showing, 300ms otherwise)
-    Timer {
-        id: pollTimer
-        interval: root.showing ? 50 : 200
-        repeat: true
-        running: true
-        triggeredOnStart: true
-        onTriggered: brightnessProc.running = true
-    }
-    
-    // Read max brightness once at start
-    Component.onCompleted: {
-        maxBrightnessProc.running = true
-    }
-    
-    Process {
-        id: maxBrightnessProc
-        command: ["/bin/cat", maxBrightnessPath]
-        
-        stdout: SplitParser {
-            onRead: data => {
-                const value = parseInt(data.trim())
-                if (!isNaN(value) && value > 0) {
-                    root.maxValue = value
-                }
-            }
-        }
-    }
-    
-    Process {
-        id: brightnessProc
-        command: ["/bin/cat", backlightPath]
-        
-        stdout: SplitParser {
-            onRead: data => {
-                const value = parseInt(data.trim())
-                if (!isNaN(value) && root.maxValue > 0) {
-                    const pct = Math.round((value / root.maxValue) * 100)
-                    if (pct !== root.currentBrightness) {
-                        root.currentBrightness = pct
-                    }
-                }
-            }
-        }
+    // Use Brightness service (portable backlight detection)
+    readonly property int pct: brightnessService.percentage
+
+    onPctChanged: {
+        if (pct !== root.currentBrightness)
+            root.currentBrightness = pct
     }
     
     // Detect changes and show OSD

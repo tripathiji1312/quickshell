@@ -25,7 +25,7 @@ Singleton {
     
     Component.onCompleted: {
         if (debugMode) {
-            console.log("🔍 [Logger] Debug mode enabled (QS_DEBUG=1)")
+            console.log("[Logger] Debug mode enabled (QS_DEBUG=1)")
         }
     }
     

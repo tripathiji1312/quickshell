@@ -82,7 +82,7 @@ Item {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        console.log("🗑️ Clearing all notifications")
+                        QsServices.Logger.debug("NotificationsSection", "Clearing all notifications")
                         notifs.clearAll()
                     }
                 }
@@ -232,7 +232,7 @@ Item {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        console.log("🗑️ Deleting notification:", modelData.summary)
+                                        QsServices.Logger.debug("NotificationsSection", `Deleting notification: ${modelData.summary}`)
                                         notifs.deleteNotification(modelData)
                                     }
                                 }

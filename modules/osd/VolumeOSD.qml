@@ -13,16 +13,16 @@ PanelWindow {
     required property var pywal
     property bool showing: false
     
-    // Use VolumeMonitor for reliable OSD triggering (reads from /tmp/volume_osd)
-    readonly property var volumeMonitor: QsServices.VolumeMonitor
-    readonly property int currentVolume: volumeMonitor.percentage
-    readonly property bool currentMuted: volumeMonitor.muted
+    readonly property var audio: QsServices.Audio
+    property int currentVolume: 0
+    property bool currentMuted: false
     
     // Track previous values to detect actual changes
     property int prevVolume: -1
     property bool prevMuted: false
     
     readonly property var appearance: QsConfig.AppearanceConfig
+    readonly property var config: QsConfig.Config
     
     visible: showing
     
@@ -46,23 +46,56 @@ PanelWindow {
     // Auto-hide timer
     Timer {
         id: hideTimer
-        interval: 2000
+        interval: config.osd.volumeTimeoutMs
         onTriggered: root.showing = false
     }
     
     // Watch for volume changes using onChanged handlers
-    onCurrentVolumeChanged: {
-        if (prevVolume !== -1 && currentVolume !== prevVolume) {
-            show()
+    Connections {
+        target: audio
+
+        function onPercentageChanged() {
+            root.currentVolume = audio.percentage
+            if (prevVolume !== -1 && root.currentVolume !== prevVolume)
+                root.show()
+            prevVolume = root.currentVolume
         }
-        prevVolume = currentVolume
+
+        function onMutedChanged() {
+            root.currentMuted = audio.muted
+            if (root.currentMuted !== prevMuted)
+                root.show()
+            prevMuted = root.currentMuted
+        }
     }
-    
-    onCurrentMutedChanged: {
-        if (currentMuted !== prevMuted) {
-            show()
+
+    // If the backend doesn't emit notify signals reliably, poll and show on change.
+    Timer {
+        interval: 150
+        running: true
+        repeat: true
+        onTriggered: {
+            const v = audio.percentage
+            const m = audio.muted
+
+            root.currentVolume = v
+            root.currentMuted = m
+
+            if (prevVolume !== -1 && v !== prevVolume)
+                root.show()
+            if (m !== prevMuted)
+                root.show()
+
+            prevVolume = v
+            prevMuted = m
         }
-        prevMuted = currentMuted
+    }
+
+    Component.onCompleted: {
+        root.currentVolume = audio.percentage
+        root.currentMuted = audio.muted
+        prevVolume = root.currentVolume
+        prevMuted = root.currentMuted
     }
     
     function show() {
