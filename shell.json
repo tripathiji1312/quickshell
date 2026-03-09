@@ -15,6 +15,34 @@
     "popupWidth": 340,
     "maxVisible": 5,
     "timeoutMs": 7000,
-    "registerServer": true
+    "registerServer": true,
+    "spacing": 10,
+    "margin": 10
+  },
+  "launcher": {
+    "enabled": true,
+    "width": 720,
+    "maxResults": 8,
+    "terminalCommand": ["foot"],
+    "favorites": [
+      "firefox",
+      "zen-browser",
+      "thunar",
+      "code",
+      "kitty",
+      "Alacritty"
+    ]
+  },
+  "sidebar": {
+    "enabled": true,
+    "width": 420,
+    "margin": 12,
+    "maxHistory": 80
+  },
+  "dashboard": {
+    "enabled": true,
+    "width": 860,
+    "height": 640,
+    "margin": 18
   }
 }

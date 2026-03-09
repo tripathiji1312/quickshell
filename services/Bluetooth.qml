@@ -1,69 +1,26 @@
 pragma Singleton
 
 import Quickshell
-import Quickshell.Io
+import Quickshell.Bluetooth
 import QtQuick
 
 Singleton {
     id: root
-    
-    property bool powered: false
-    property bool connected: false
-    property string deviceName: ""
-    
-    // Check status periodically
-    Timer {
-        interval: 2000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: statusProc.running = true
-    }
-    
-    Process {
-        id: statusProc
-        command: ["bluetoothctl", "show"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.powered = text.includes("Powered: yes")
-            }
-        }
-    }
-    
-    onPoweredChanged: {
-        if (powered) {
-            // If powered on, check connection
-            connectedProc.running = true
-        } else {
-            connected = false
-            deviceName = ""
-        }
-    }
-    
-    Process {
-        id: connectedProc
-        command: ["bluetoothctl", "info"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.connected = text.includes("Connected: yes")
-                if (root.connected) {
-                    const nameMatch = text.match(/Name: (.*)/)
-                    root.deviceName = nameMatch ? nameMatch[1] : "Device"
-                } else {
-                    root.deviceName = ""
-                }
-            }
-        }
-    }
-    
+
+    readonly property var adapter: Bluetooth.defaultAdapter
+    readonly property var connectedDevices: Bluetooth.devices.values.filter(device => device.connected)
+    readonly property bool powered: adapter?.enabled ?? false
+    readonly property bool connected: connectedDevices.length > 0
+    readonly property string deviceName: connected ? (connectedDevices[0]?.name ?? connectedDevices[0]?.alias ?? "Device") : ""
+    readonly property int connectedCount: connectedDevices.length
+
     function togglePower() {
-        const cmd = powered ? "power off" : "power on"
-        toggleProc.command = ["bluetoothctl", cmd]
-        toggleProc.running = true
+        if (adapter)
+            adapter.enabled = !adapter.enabled
     }
-    
-    Process {
-        id: toggleProc
-        onExited: statusProc.running = true
+
+    function setDiscovering(enabled: bool) {
+        if (adapter)
+            adapter.discovering = enabled
     }
 }

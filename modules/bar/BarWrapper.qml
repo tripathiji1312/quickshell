@@ -68,6 +68,30 @@ Scope {
             }
         }
     }
+
+    Loader {
+        id: launcherLoader
+        source: "../launcher/LauncherWindow.qml"
+        asynchronous: true
+
+        property var launcher: item
+    }
+
+    Loader {
+        id: sidebarLoader
+        source: "../sidebar/SidebarWindow.qml"
+        asynchronous: true
+
+        property var sidebar: item
+    }
+
+    Loader {
+        id: dashboardLoader
+        source: "../dashboard/DashboardWindow.qml"
+        asynchronous: true
+
+        property var dashboard: item
+    }
     
     Variants {
         model: Quickshell.screens
@@ -103,6 +127,9 @@ Scope {
                         item.volumePopup = Qt.binding(() => volumePopupLoader.item)
                         item.brightnessPopup = Qt.binding(() => brightnessPopupLoader.item)
                         item.controlCenter = Qt.binding(() => controlCenterLoader.item)
+                        item.launcher = Qt.binding(() => launcherLoader.item)
+                        item.sidebar = Qt.binding(() => sidebarLoader.item)
+                        item.dashboard = Qt.binding(() => dashboardLoader.item)
                     }
                 }
             }

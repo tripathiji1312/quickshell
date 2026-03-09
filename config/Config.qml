@@ -37,9 +37,41 @@ Singleton {
         popupWidth: data.notifications?.popupWidth ?? 340,
         maxVisible: data.notifications?.maxVisible ?? 5,
         timeoutMs: data.notifications?.timeoutMs ?? 7000,
-        registerServer: data.notifications?.registerServer ?? false,
+        registerServer: data.notifications?.registerServer ?? true,
         spacing: data.notifications?.spacing ?? 8,
         margin: data.notifications?.margin ?? 8
+    })
+
+    readonly property var launcher: ({
+        enabled: data.launcher?.enabled ?? true,
+        width: data.launcher?.width ?? 720,
+        maxResults: data.launcher?.maxResults ?? 8,
+        terminalCommand: data.launcher?.terminalCommand ?? ["foot"],
+        favorites: data.launcher?.favorites ?? [
+            "org.wezfurlong.wezterm",
+            "kitty",
+            "Alacritty",
+            "firefox",
+            "zen-browser",
+            "thunar",
+            "org.gnome.Nautilus",
+            "code",
+            "Code"
+        ]
+    })
+
+    readonly property var sidebar: ({
+        enabled: data.sidebar?.enabled ?? true,
+        width: data.sidebar?.width ?? 420,
+        margin: data.sidebar?.margin ?? 12,
+        maxHistory: data.sidebar?.maxHistory ?? 80
+    })
+
+    readonly property var dashboard: ({
+        enabled: data.dashboard?.enabled ?? true,
+        width: data.dashboard?.width ?? 860,
+        height: data.dashboard?.height ?? 640,
+        margin: data.dashboard?.margin ?? 18
     })
 
     readonly property BarConfig bar: BarConfig {}

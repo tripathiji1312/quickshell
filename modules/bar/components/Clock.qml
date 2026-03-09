@@ -5,6 +5,11 @@ import "../../../components/effects"
 
 Item {
     id: root
+
+    property var launcher
+    property var controlCenter
+    property var sidebar
+    property var dashboard
     
     implicitWidth: clockRow.implicitWidth
     implicitHeight: clockRow.implicitHeight
@@ -69,6 +74,45 @@ Item {
             font.pixelSize: 10
             font.weight: Font.Medium
             font.family: "Inter"
+        }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        anchors.margins: -6
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+
+        onClicked: mouse => {
+            if (mouse.button === Qt.RightButton) {
+                if (!root.dashboard)
+                    return
+
+                root.dashboard.shouldShow = !root.dashboard.shouldShow
+                if (root.dashboard.shouldShow) {
+                    if (root.launcher)
+                        root.launcher.shouldShow = false
+                    if (root.controlCenter)
+                        root.controlCenter.shouldShow = false
+                    if (root.sidebar)
+                        root.sidebar.shouldShow = false
+                }
+                return
+            }
+
+            if (!root.launcher)
+                return
+
+            root.launcher.shouldShow = !root.launcher.shouldShow
+            if (root.launcher.shouldShow) {
+                if (root.controlCenter)
+                    root.controlCenter.shouldShow = false
+                if (root.sidebar)
+                    root.sidebar.shouldShow = false
+                if (root.dashboard)
+                    root.dashboard.shouldShow = false
+            }
         }
     }
 }

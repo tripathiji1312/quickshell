@@ -22,6 +22,8 @@ Singleton {
         const hoursSinceNotif = (new Date().getTime() - n.timestamp.getTime()) / (1000 * 60 * 60)
         return hoursSinceNotif < 24
     }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+    readonly property var unreadNotifications: recentNotifications.filter(n => !n.read)
+    readonly property int unreadCount: unreadNotifications.length
     
     // Group notifications by app for better UX
     readonly property var groupedNotifications: {
@@ -49,6 +51,14 @@ Singleton {
     }
     
     property bool dnd: false
+    property double lastReadAt: 0
+
+    PersistentProperties {
+        id: persist
+        property alias dnd: root.dnd
+        property alias lastReadAt: root.lastReadAt
+        reloadableId: "notifications-state"
+    }
     
     // Cleanup timer to prevent memory leaks
     Timer {
@@ -93,6 +103,15 @@ Singleton {
         QsServices.Logger.debug("Notifs", `Queued: ${notifWrapper.appName ?? ""} ${notifWrapper.summary ?? ""}`)
     }
 
+    function markAllRead() {
+        const stamp = Date.now()
+        lastReadAt = stamp
+        notifications.forEach(notification => {
+            if (notification)
+                notification.read = true
+        })
+    }
+
     function _actionsToArray(actionList) {
         const out = []
         if (!actionList)
@@ -121,6 +140,7 @@ Singleton {
     // Clear all notifications
     function clearAll() {
         notifications.forEach(n => n.close());
+        markAllRead()
         QsServices.Logger.info("Notifs", "All notifications cleared")
     }
     
@@ -138,6 +158,7 @@ Singleton {
         property date timestamp: new Date()
         property bool closed: false
         property bool hasAnimated: false  // Track if popup animation has played
+        property bool read: false
         
         // Notification properties
         property string notifId: ""
@@ -233,6 +254,7 @@ Singleton {
             image = notification.image
             urgency = notification.urgency
             actions = root._actionsToArray(notification.actions)
+            read = timestamp.getTime() <= root.lastReadAt
         }
     }
     

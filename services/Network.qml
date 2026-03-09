@@ -16,7 +16,7 @@ Singleton {
     // Convenience properties for Control Center
     readonly property bool connected: active !== null
     readonly property string ssid: active?.ssid ?? "Not Connected"
-    readonly property int signalStrength: active?.signalStrength ?? 0
+    readonly property int signalStrength: active?.strength ?? 0
     
     property var savedNetworks: []
     
@@ -63,9 +63,13 @@ Singleton {
             connectProc.exec(["nmcli", "connection", "up", "id", ssid]);
         }
     }
+
+    function refreshSavedNetworks(): void {
+        checkSavedProc.running = true;
+    }
     
     function isNetworkSaved(ssid: string): bool {
-        checkSavedProc.exec(["nmcli", "-g", "NAME", "connection", "show"]);
+        refreshSavedNetworks();
         return savedNetworks.includes(ssid);
     }
 
@@ -185,14 +189,14 @@ Singleton {
     property var _prevSavedNetworks: []
     
     Component.onCompleted: {
-        checkSavedProc.running = true // Load saved networks on start
+        refreshSavedNetworks();
     }
     
     Timer {
         interval: 10000 // Update saved networks every 10 seconds
         running: root.pollingActive  // Pause when no consumer is visible
         repeat: true
-        onTriggered: checkSavedProc.running = true
+        onTriggered: refreshSavedNetworks()
     }
 
     Process {

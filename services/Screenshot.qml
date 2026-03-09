@@ -12,6 +12,7 @@ Singleton {
     
     property bool isRecording: false
     property string lastScreenshotPath: ""
+    property string lastRecordingPath: ""
     property string screenshotsDir: QsConfig.Config.paths.screenshotsDir
 
     property string _slurpGeometry: ""
@@ -131,6 +132,7 @@ Singleton {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
         const filename = `recording-${timestamp}.mp4`
         const filepath = `${screenshotsDir}/${filename}`
+        root.lastRecordingPath = filepath
         
         recordProc.exec([
             "wf-recorder",
@@ -148,11 +150,12 @@ Singleton {
         onExited: code => {
             root.isRecording = false
             if (code === 0) {
-                QsServices.Logger.info("Screenshot", "Recording saved")
+                QsServices.Logger.info("Screenshot", `Recording saved: ${root.lastRecordingPath}`)
                 notifyProc.exec([
                     "notify-send",
+                    "-i", "video-x-generic",
                     "Screen recording saved",
-                    "Recording complete"
+                    root.lastRecordingPath
                 ])
             }
         }

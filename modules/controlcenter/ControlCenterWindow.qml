@@ -45,6 +45,12 @@ PanelWindow {
         command: ["wlogout"]
         onStarted: root.shouldShow = false
     }
+
+    Process {
+        id: screenshotsProcess
+        command: ["xdg-open", root.screenshot.screenshotsDir]
+        onStarted: root.shouldShow = false
+    }
     
     // Solid UI Color Tokens - Professional dark theme
     readonly property color cSurface: pywal.background
@@ -363,6 +369,35 @@ PanelWindow {
                                 surfaceColor: root.cSurfaceContainerHigh
                                 textColor: root.cOnSurface
                                 onClicked: root.screenshot.takeScreenshot("screen")
+                            }
+
+                            QuickToggle {
+                                Layout.fillWidth: true
+                                icon: root.screenshot.isRecording ? "󰛿" : "󰻃"
+                                label: root.screenshot.isRecording ? "Stop Recording" : "Record Screen"
+                                subLabel: root.screenshot.isRecording ? "Recording in progress" : "Start wf-recorder"
+                                active: root.screenshot.isRecording
+                                activeColor: pywal.error
+                                surfaceColor: root.cSurfaceContainerHigh
+                                textColor: root.cOnSurface
+                                onClicked: {
+                                    if (root.screenshot.isRecording)
+                                        root.screenshot.stopRecording()
+                                    else
+                                        root.screenshot.startRecording()
+                                }
+                            }
+
+                            QuickToggle {
+                                Layout.fillWidth: true
+                                icon: "󰉋"
+                                label: "Open Captures"
+                                subLabel: "Screenshots & recordings"
+                                active: false
+                                activeColor: root.cSecondary
+                                surfaceColor: root.cSurfaceContainerHigh
+                                textColor: root.cOnSurface
+                                onClicked: screenshotsProcess.running = true
                             }
                         }
                         

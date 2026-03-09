@@ -18,6 +18,9 @@ Item {
     property var volumePopup
     property var brightnessPopup
     property var controlCenter
+    property var launcher
+    property var sidebar
+    property var dashboard
     
     readonly property var config: QsConfig.Config
     readonly property var appearance: QsConfig.AppearanceConfig
@@ -141,6 +144,38 @@ Item {
                 anchors.centerIn: parent
                 asynchronous: true
                 source: "components/Clock.qml"
+
+                Binding {
+                    target: clockLoader.item
+                    property: "launcher"
+                    value: root.launcher
+                    when: clockLoader.status === Loader.Ready && root.launcher !== undefined
+                    restoreMode: Binding.RestoreBinding
+                }
+
+                Binding {
+                    target: clockLoader.item
+                    property: "controlCenter"
+                    value: root.controlCenter
+                    when: clockLoader.status === Loader.Ready && root.controlCenter !== undefined
+                    restoreMode: Binding.RestoreBinding
+                }
+
+                Binding {
+                    target: clockLoader.item
+                    property: "sidebar"
+                    value: root.sidebar
+                    when: clockLoader.status === Loader.Ready && root.sidebar !== undefined
+                    restoreMode: Binding.RestoreBinding
+                }
+
+                Binding {
+                    target: clockLoader.item
+                    property: "dashboard"
+                    value: root.dashboard
+                    when: clockLoader.status === Loader.Ready && root.dashboard !== undefined
+                    restoreMode: Binding.RestoreBinding
+                }
             }
         }
         
@@ -400,6 +435,45 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         asynchronous: true
                         source: "components/Battery.qml"
+                    }
+
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 1
+                        height: 12
+                        radius: 0.5
+                        color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.12)
+                    }
+
+                    Loader {
+                        id: notifCenterLoader
+                        anchors.verticalCenter: parent.verticalCenter
+                        asynchronous: true
+                        source: "components/NotificationCenterToggle.qml"
+
+                        Binding {
+                            target: notifCenterLoader.item
+                            property: "sidebar"
+                            value: root.sidebar
+                            when: notifCenterLoader.status === Loader.Ready && root.sidebar !== undefined
+                            restoreMode: Binding.RestoreBinding
+                        }
+
+                        Binding {
+                            target: notifCenterLoader.item
+                            property: "controlCenter"
+                            value: root.controlCenter
+                            when: notifCenterLoader.status === Loader.Ready && root.controlCenter !== undefined
+                            restoreMode: Binding.RestoreBinding
+                        }
+
+                        Binding {
+                            target: notifCenterLoader.item
+                            property: "launcher"
+                            value: root.launcher
+                            when: notifCenterLoader.status === Loader.Ready && root.launcher !== undefined
+                            restoreMode: Binding.RestoreBinding
+                        }
                     }
                     
                     // Separator

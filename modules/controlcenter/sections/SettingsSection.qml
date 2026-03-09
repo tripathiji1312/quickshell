@@ -14,6 +14,12 @@ Item {
     readonly property var network: QsServices.Network
     readonly property var bluetooth: QsServices.Bluetooth
     readonly property var idleInhibitor: QsServices.IdleInhibitor
+
+    Process { id: lockProc; command: ["loginctl", "lock-session"] }
+    Process { id: logoutProc; command: ["hyprctl", "dispatch", "exit"] }
+    Process { id: sleepProc; command: ["systemctl", "suspend"] }
+    Process { id: wifiSettingsProc; command: ["nm-connection-editor"] }
+    Process { id: bluetoothSettingsProc; command: ["blueman-manager"] }
     
     // DND state (simple toggle for now)
     property bool dndEnabled: false
@@ -68,8 +74,7 @@ Item {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            // Lock screen command
-                            QsServices.Logger.debug("SettingsSection", "Lock screen")
+                            lockProc.running = true
                         }
                         
                         onPressed: parent.color = Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.1)
@@ -109,7 +114,7 @@ Item {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            QsServices.Logger.debug("SettingsSection", "Logout")
+                            logoutProc.running = true
                         }
                         
                         onPressed: parent.color = Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.1)
@@ -149,7 +154,7 @@ Item {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            QsServices.Logger.debug("SettingsSection", "Sleep")
+                            sleepProc.running = true
                         }
                         
                         onPressed: parent.color = Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.1)
@@ -412,8 +417,7 @@ Item {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        // TODO: Open WiFi selection dialog
-                        QsServices.Logger.debug("SettingsSection", "Open WiFi settings")
+                        wifiSettingsProc.running = true
                     }
                     
                     onPressed: parent.color = Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.1)
@@ -473,8 +477,7 @@ Item {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        // TODO: Open Bluetooth selection dialog
-                        QsServices.Logger.debug("SettingsSection", "Open Bluetooth settings")
+                        bluetoothSettingsProc.running = true
                     }
                     
                     onPressed: parent.color = Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.1)
