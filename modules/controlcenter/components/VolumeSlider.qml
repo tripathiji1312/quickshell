@@ -16,15 +16,17 @@ Rectangle {
     readonly property bool isMuted: audio.muted
     
     // Solid color tokens
-    readonly property color surfaceColor: pywal ? Qt.lighter(pywal.background, 1.25) : "#2a2a3a"
-    readonly property color textColor: pywal ? pywal.foreground : "#e6e6e6"
-    readonly property color accentColor: pywal ? pywal.primary : "#a6e3a1"
+    readonly property color surfaceColor: pywal ? pywal.surfaceContainerHighest : "#1a1a1a"
+    readonly property color textColor: pywal ? pywal.foreground : "#dddddd"
+    readonly property color accentColor: pywal ? pywal.primary : "#88cc88"
     
     Layout.fillWidth: true
-    Layout.preferredHeight: 48
+    Layout.preferredHeight: 54
     
-    radius: 24
+    radius: 22
     color: surfaceColor
+    border.width: 1
+    border.color: pywal ? pywal.outlineVariant : Qt.rgba(1, 1, 1, 0.12)
     
     Behavior on color {
         ColorAnimation {
@@ -32,7 +34,7 @@ Rectangle {
             easing.bezierCurve: Material3Anim.standard
         }
     }
-    
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
@@ -40,9 +42,9 @@ Rectangle {
         // Mute Button
         Rectangle {
             id: muteBtn
-            Layout.preferredWidth: 48
+            Layout.preferredWidth: 52
             Layout.fillHeight: true
-            radius: 24
+            radius: 20
             color: muteMouse.containsMouse 
                 ? Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.1) 
                 : "transparent"
@@ -59,7 +61,7 @@ Rectangle {
                 text: root.isMuted ? "󰝟" : (root.currentVolume > 66 ? "󰕾" : (root.currentVolume > 33 ? "󰖀" : "󰕿"))
                 font.family: "Material Design Icons"
                 font.pixelSize: 20
-                color: root.isMuted ? root.accentColor : root.textColor
+                color: root.isMuted ? Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.5) : root.accentColor
                 
                 Behavior on color {
                     ColorAnimation {
@@ -96,19 +98,19 @@ Rectangle {
                 x: slider.leftPadding
                 y: slider.topPadding + slider.availableHeight / 2 - height / 2
                 implicitWidth: 200
-                implicitHeight: 48
+                implicitHeight: 30
                 width: slider.availableWidth
                 height: implicitHeight
-                radius: 24
-                color: "transparent"
+                radius: 15
+                color: Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.08)
                 
                 // Progress fill
                 Rectangle {
                     width: slider.visualPosition * parent.width
                     height: parent.height
-                    radius: 24
+                    radius: 15
                     color: root.accentColor
-                    opacity: 0.2
+                    opacity: 0.34
                     
                     Behavior on width {
                         NumberAnimation {
@@ -116,6 +118,17 @@ Rectangle {
                             easing.bezierCurve: Material3Anim.standard
                         }
                     }
+                }
+
+                Rectangle {
+                    width: 10
+                    height: 10
+                    radius: 5
+                    x: Math.max(0, Math.min(parent.width - width, slider.visualPosition * parent.width - width / 2))
+                    y: (parent.height - height) / 2
+                    color: root.accentColor
+                    border.width: 2
+                    border.color: root.surfaceColor
                 }
             }
             
@@ -127,7 +140,7 @@ Rectangle {
         // Percentage Text
         Text {
             Layout.rightMargin: 16
-            Layout.preferredWidth: 40
+            Layout.preferredWidth: 44
             text: root.currentVolume + "%"
             font.family: "Inter"
             font.pixelSize: 13

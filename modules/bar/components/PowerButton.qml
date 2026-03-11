@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import Quickshell
 import qs.services
+import "../../../components/effects"
 
 Item {
     id: root
@@ -17,33 +18,33 @@ Item {
         radius: 14
         
         color: {
-            if (mouseArea.pressed) return Qt.alpha(Pywal.colors.color1, 0.3)
-            if (mouseArea.containsMouse) return Qt.alpha(Pywal.colors.color1, 0.2)
-            return Qt.alpha(Pywal.colors.color1, 0.12)
+            if (mouseArea.pressed) return Qt.alpha(Pywal.error, 0.3)
+            if (mouseArea.containsMouse) return Qt.alpha(Pywal.error, 0.2)
+            return Qt.alpha(Pywal.error, 0.12)
         }
         
-        border.width: 1
-        border.color: Qt.alpha(Pywal.colors.color1, mouseArea.containsMouse ? 0.4 : 0.2)
+        border.width: 0
+        border.color: Qt.alpha(Pywal.error, mouseArea.containsMouse ? 0.4 : 0.2)
         
         scale: mouseArea.pressed ? 0.92 : (mouseArea.containsMouse ? 1.05 : 1.0)
         
         Behavior on color {
             ColorAnimation {
-                duration: 150
+                duration: Material3Anim.short3
                 easing.type: Easing.OutCubic
             }
         }
         
         Behavior on border.color {
             ColorAnimation {
-                duration: 150
+                duration: Material3Anim.short3
                 easing.type: Easing.OutCubic
             }
         }
         
         Behavior on scale {
             NumberAnimation {
-                duration: 150
+                duration: Material3Anim.short3
                 easing.type: Easing.OutBack
                 easing.overshoot: 1.1
             }
@@ -53,8 +54,9 @@ Item {
     // Power icon
     Text {
         anchors.centerIn: parent
-        text: "⏻"
-        color: Pywal.colors.color1
+        text: "󰐥"
+        font.family: "Material Design Icons"
+        color: Pywal.error
         font.pixelSize: 16
         font.bold: true
     }
@@ -66,7 +68,6 @@ Item {
         cursorShape: Qt.PointingHandCursor
         
         onClicked: {
-            Services.Logger.info("PowerButton", "Executing shutdown")
             // Execute shutdown command
             Quickshell.execDetached(["systemctl", "poweroff"])
         }

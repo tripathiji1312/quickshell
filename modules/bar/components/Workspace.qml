@@ -82,7 +82,7 @@ Rectangle {
         radius: parent.radius - 1
         color: "transparent"
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.2)
+        border.color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.2)
         
         Behavior on opacity {
             NumberAnimation { 

@@ -287,13 +287,10 @@ Item {
                             }
                         }
                         
-                        // Gradient overlay for playing indicator
+                        // Solid scrim for foreground legibility
                         Rectangle {
                             anchors.fill: parent
-                            gradient: Gradient {
-                                GradientStop { position: 0.0; color: "transparent" }
-                                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.3) }
-                            }
+                            color: Qt.rgba(0, 0, 0, 0.18)
                             visible: albumArtImage.status === Image.Ready
                         }
                         

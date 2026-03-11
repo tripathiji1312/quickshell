@@ -49,8 +49,8 @@ Rectangle {
     
     // Color tokens
     readonly property color surfaceColor: pywal ? Qt.lighter(pywal.background, 1.12) : "#1e1e2e"
-    readonly property color textColor: "#ffffff"
-    readonly property color textDim: Qt.rgba(1, 1, 1, 0.7)
+    readonly property color textColor: pywal ? pywal.foreground : "#dddddd"
+    readonly property color textDim: pywal ? Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.7) : Qt.rgba(1, 1, 1, 0.7)
     readonly property color accentColor: pywal ? pywal.primary : "#a6e3a1"
     
     Layout.fillWidth: true
@@ -101,7 +101,7 @@ Rectangle {
     // Dark overlay for readability
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.3)
+        color: pywal ? Qt.rgba(pywal.background.r, pywal.background.g, pywal.background.b, 0.4) : Qt.rgba(0, 0, 0, 0.3)
         visible: bgImage.status === Image.Ready
     }
     
@@ -188,7 +188,7 @@ Rectangle {
                 text: "󰝚"
                 font.family: "Material Design Icons"
                 font.pixelSize: 32
-                color: Qt.rgba(1, 1, 1, 0.3)
+                color: pywal ? Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.3) : Qt.rgba(1, 1, 1, 0.3)
                 visible: albumArt.status !== Image.Ready
             }
         }
@@ -284,7 +284,7 @@ Rectangle {
                     text: root.isPlaying ? "󰏤" : "󰐊"
                     font.family: "Material Design Icons"
                     font.pixelSize: 24
-                    color: Qt.rgba(0, 0, 0, 0.9)
+                    color: pywal ? pywal.background : Qt.rgba(0, 0, 0, 0.9)
                 }
                 
                 MouseArea {

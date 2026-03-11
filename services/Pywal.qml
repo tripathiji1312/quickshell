@@ -48,16 +48,24 @@ Singleton {
     readonly property color tertiary: color6
     readonly property color tertiaryContainer: Qt.rgba(color6.r, color6.g, color6.b, 0.2)
     
-    // Surface colors (for cards, popups, containers)
-    readonly property color surface: background
-    readonly property color surfaceDim: Qt.darker(background, 1.1)
-    readonly property color surfaceBright: Qt.lighter(background, 1.3)
-    readonly property color surfaceContainer: Qt.lighter(background, 1.15)
-    readonly property color surfaceContainerLow: Qt.lighter(background, 1.08)
-    readonly property color surfaceContainerHigh: Qt.lighter(background, 1.22)
-    readonly property color surfaceContainerHighest: Qt.lighter(background, 1.3)
+    // Surface colors (solid Material 3-style containers)
+    readonly property color surface: Qt.lighter(background, 1.03)
+    readonly property color surfaceDim: Qt.darker(background, 1.08)
+    readonly property color surfaceBright: Qt.lighter(background, 1.12)
+    readonly property color surfaceContainer: Qt.lighter(background, 1.1)
+    readonly property color surfaceContainerLow: Qt.lighter(background, 1.06)
+    readonly property color surfaceContainerHigh: Qt.lighter(background, 1.16)
+    readonly property color surfaceContainerHighest: Qt.lighter(background, 1.22)
     readonly property color onSurface: foreground
     readonly property color onSurfaceVariant: color8
+    readonly property color onSurfaceMuted: Qt.rgba(foreground.r, foreground.g, foreground.b, 0.68)
+
+    // Compatibility aliases kept for existing components now mapped to solid surfaces
+    readonly property color glassLow: surfaceContainerLow
+    readonly property color glassHigh: surfaceContainerHigh
+    readonly property color glassHighest: surfaceContainerHighest
+    readonly property color glassBorder: outlineVariant
+    readonly property color glassBorderStrong: Qt.rgba(primary.r, primary.g, primary.b, 0.28)
     
     // Outline colors
     readonly property color outline: color8

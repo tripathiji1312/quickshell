@@ -20,8 +20,9 @@ Item {
     readonly property bool isCharging: battery?.state === UPowerDevice.Charging
     readonly property bool isFullyCharged: battery?.state === UPowerDevice.FullyCharged
     readonly property bool isPluggedIn: isCharging || isFullyCharged
-    readonly property bool isLow: batteryLevel <= 25 && !isPluggedIn
-    readonly property bool isCritical: batteryLevel <= 15 && !isPluggedIn
+    readonly property bool isWarning: batteryLevel <= 25 && batteryLevel > 15
+    readonly property bool isLow: batteryLevel <= 15
+    readonly property bool isCritical: isLow && !isPluggedIn
     
     // Track state changes for animations
     property bool wasPluggedIn: false
@@ -52,14 +53,20 @@ Item {
     
     // Colors
     readonly property color normalColor: {
-        if (isCritical) return "#ef4444"
-        if (isLow) return "#f59e0b"
+        if (isLow) return pywal.error
+        if (isWarning) return pywal.warning
         if (batteryLevel >= 60) return Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.7)
         return Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.6)
     }
     
-    readonly property color chargingColor: "#2dd4bf"  // Teal/cyan like the reference
-    readonly property color liquidColor: "#5eead4"
+    readonly property color chargingColor: pywal.success
+    readonly property color liquidColor: Qt.lighter(pywal.success, 1.2)
+    readonly property color compactBatteryColor: {
+        if (showExpandedMode || justPluggedIn) return chargingColor
+        if (isPluggedIn && (isLow || isWarning)) return normalColor
+        if (isPluggedIn) return chargingColor
+        return normalColor
+    }
     
     // Main container
     Item {
@@ -106,7 +113,7 @@ Item {
                     radius: 3
                     color: "transparent"
                     border.width: 1.5
-                    border.color: isPluggedIn ? chargingColor : normalColor
+                    border.color: compactBatteryColor
                     
                     Behavior on border.color {
                         ColorAnimation { duration: 300 }
@@ -121,12 +128,7 @@ Item {
                         anchors.margins: 2.5
                         width: Math.max(0, (parent.width - 5) * root.percentage)
                         radius: 1.5
-                        
-                        gradient: Gradient {
-                            orientation: Gradient.Horizontal
-                            GradientStop { position: 0.0; color: isPluggedIn ? Qt.darker(chargingColor, 1.1) : Qt.darker(normalColor, 1.1) }
-                            GradientStop { position: 1.0; color: isPluggedIn ? chargingColor : normalColor }
-                        }
+                        color: compactBatteryColor
                         
                         Behavior on width {
                             NumberAnimation { duration: 400; easing.type: Easing.OutCubic }
@@ -138,21 +140,24 @@ Item {
                             visible: isCharging && !isFullyCharged && !showExpandedMode
                             anchors.fill: parent
                             radius: parent.radius
+                            color: Qt.rgba(1, 1, 1, 0.12)
+                            opacity: 0
                             
                             property real shimmerPos: 0
-                            
-                            gradient: Gradient {
-                                orientation: Gradient.Horizontal
-                                GradientStop { position: chargeShimmer.shimmerPos - 0.3; color: "transparent" }
-                                GradientStop { position: chargeShimmer.shimmerPos; color: Qt.rgba(1, 1, 1, 0.5) }
-                                GradientStop { position: chargeShimmer.shimmerPos + 0.3; color: "transparent" }
-                            }
+                            x: (parent.width + width) * shimmerPos - width
                             
                             SequentialAnimation on shimmerPos {
                                 running: isCharging && !isFullyCharged && !showExpandedMode
                                 loops: Animation.Infinite
                                 NumberAnimation { from: -0.3; to: 1.3; duration: 1200; easing.type: Easing.InOutSine }
                                 PauseAnimation { duration: 400 }
+                            }
+
+                            SequentialAnimation on opacity {
+                                running: isCharging && !isFullyCharged && !showExpandedMode
+                                loops: Animation.Infinite
+                                NumberAnimation { from: 0.04; to: 0.16; duration: 600; easing.type: Easing.InOutSine }
+                                NumberAnimation { from: 0.16; to: 0.04; duration: 600; easing.type: Easing.InOutSine }
                             }
                         }
                     }
@@ -166,7 +171,7 @@ Item {
                     width: 3
                     height: 5
                     radius: 1.5
-                    color: isPluggedIn ? chargingColor : normalColor
+                    color: compactBatteryColor
                     
                     Behavior on color {
                         ColorAnimation { duration: 300 }
@@ -180,7 +185,7 @@ Item {
                     text: "󱐋"
                     font.family: "Material Design Icons"
                     font.pixelSize: 9
-                    color: batteryLevel > 50 ? "#000000" : "#ffffff"
+                    color: batteryLevel > 50 ? pywal.background : pywal.foreground
                     opacity: 0.9
                     
                     SequentialAnimation on scale {
@@ -198,8 +203,8 @@ Item {
                 text: batteryLevel + "%"
                 font.family: "Inter"
                 font.pixelSize: 11
-                font.weight: isLow ? Font.Bold : Font.Medium
-                color: isPluggedIn ? chargingColor : normalColor
+                font.weight: (isWarning || isLow) ? Font.Bold : Font.Medium
+                color: compactBatteryColor
                 
                 Behavior on color {
                     ColorAnimation { duration: 300 }
@@ -226,7 +231,7 @@ Item {
             radius: 10
             visible: showExpandedMode
             opacity: showExpandedMode ? 1 : 0
-            color: Qt.rgba(0.1, 0.1, 0.12, 1)
+            color: pywal.surfaceDim
             border.width: 1.5
             border.color: chargingColor
             
@@ -243,12 +248,7 @@ Item {
                 anchors.margins: 2
                 width: 0
                 radius: parent.radius - 2
-                
-                gradient: Gradient {
-                    orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: Qt.darker(chargingColor, 1.1) }
-                    GradientStop { position: 1.0; color: chargingColor }
-                }
+                color: chargingColor
                 
                 // Liquid fill animation
                 SequentialAnimation {
@@ -269,21 +269,24 @@ Item {
                     id: liquidShimmer
                     anchors.fill: parent
                     radius: parent.radius
+                    color: Qt.rgba(1, 1, 1, 0.10)
+                    opacity: 0
                     
                     property real shimmerX: 0
-                    
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: liquidShimmer.shimmerX - 0.2; color: "transparent" }
-                        GradientStop { position: liquidShimmer.shimmerX; color: Qt.rgba(1, 1, 1, 0.4) }
-                        GradientStop { position: liquidShimmer.shimmerX + 0.2; color: "transparent" }
-                    }
+                    x: (parent.width + width) * shimmerX - width
                     
                     SequentialAnimation on shimmerX {
                         running: showExpandedMode
                         loops: Animation.Infinite
                         NumberAnimation { from: -0.2; to: 1.2; duration: 1000 }
                         PauseAnimation { duration: 500 }
+                    }
+
+                    SequentialAnimation on opacity {
+                        running: showExpandedMode
+                        loops: Animation.Infinite
+                        NumberAnimation { from: 0.03; to: 0.14; duration: 500; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.14; to: 0.03; duration: 500; easing.type: Easing.InOutSine }
                     }
                 }
             }
@@ -295,7 +298,7 @@ Item {
                 font.family: "Inter"
                 font.pixelSize: 11
                 font.weight: Font.Bold
-                color: "#ffffff"
+                color: pywal.foreground
             }
         }
     }

@@ -82,7 +82,7 @@ Item {
             width: dndActive ? 22 : 0
             height: 22
             radius: 11
-            color: Qt.rgba(255/255, 152/255, 0/255, 0.2)  // Orange-ish
+            color: Qt.rgba(pywal.warning.r, pywal.warning.g, pywal.warning.b, 0.2)
             visible: dndActive
             
             Behavior on width {
@@ -94,7 +94,7 @@ Item {
                 text: "󰂛"  // Bell off icon
                 font.family: "Material Design Icons"
                 font.pixelSize: 12
-                color: "#ff9800"
+                color: pywal.warning
             }
             
             MouseArea {

@@ -6,6 +6,7 @@ import Quickshell.Wayland
 import Quickshell.Services.UPower
 import "../../config" as QsConfig
 import "../../services" as QsServices
+import "../../components"
 import "../controlcenter/components"
 
 PanelWindow {
@@ -26,13 +27,13 @@ PanelWindow {
     readonly property var bluetooth: QsServices.Bluetooth
     readonly property var battery: UPower.displayDevice
 
-    readonly property color cSurface: Qt.rgba(pywal.background.r, pywal.background.g, pywal.background.b, 0.97)
-    readonly property color cSurfaceContainer: Qt.lighter(pywal.background, 1.12)
-    readonly property color cSurfaceContainerHigh: Qt.lighter(pywal.background, 1.20)
+    readonly property color cSurface: pywal.surfaceContainerHighest
+    readonly property color cSurfaceContainer: pywal.surfaceContainerHigh
+    readonly property color cSurfaceContainerHigh: pywal.surfaceContainerHigh
     readonly property color cPrimary: pywal.primary
     readonly property color cText: pywal.foreground
-    readonly property color cSubText: Qt.rgba(cText.r, cText.g, cText.b, 0.68)
-    readonly property color cBorder: Qt.rgba(cText.r, cText.g, cText.b, 0.08)
+    readonly property color cSubText: pywal.onSurfaceMuted
+    readonly property color cBorder: pywal.outlineVariant
     readonly property int batteryPercent: Math.round((battery?.percentage ?? 0) * 100)
     readonly property bool hasMedia: players?.active !== null
     readonly property var currentDate: time.date
@@ -88,26 +89,34 @@ PanelWindow {
     FocusScope {
         id: panel
         anchors.fill: parent
-        scale: shouldShow ? 1.0 : 0.97
+        property real revealOffset: shouldShow ? 0 : -18
+        scale: shouldShow ? 1.0 : 0.975
         opacity: shouldShow ? 1.0 : 0.0
         focus: root.shouldShow
+        transform: Translate { y: panel.revealOffset }
 
         Keys.onEscapePressed: root.closeDashboard()
 
         Behavior on scale {
-            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: 240; easing.bezierCurve: [0.22, 1.0, 0.36, 1.0] }
         }
 
         Behavior on opacity {
-            NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+            NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
         }
 
-        Rectangle {
+        Behavior on revealOffset {
+            NumberAnimation { duration: 260; easing.bezierCurve: [0.05, 0.7, 0.1, 1.0] }
+        }
+
+        AuroraSurface {
             anchors.fill: parent
             radius: 28
             color: root.cSurface
-            border.width: 1
-            border.color: root.cBorder
+            strokeColor: root.cBorder
+            accentColor: root.cPrimary
+            elevation: 4
+            highlighted: root.shouldShow
 
             ColumnLayout {
                 anchors.fill: parent
@@ -492,7 +501,9 @@ PanelWindow {
         width: chipRow.implicitWidth + 18
         height: 34
         radius: 17
-        color: Qt.rgba(accent.r, accent.g, accent.b, 0.12)
+        color: Qt.rgba(accent.r, accent.g, accent.b, 0.14)
+        border.width: 1
+        border.color: Qt.rgba(accent.r, accent.g, accent.b, 0.18)
 
         RowLayout {
             id: chipRow
@@ -523,10 +534,15 @@ PanelWindow {
         signal clicked()
 
         radius: 18
-        color: mouse.containsMouse ? root.cSurfaceContainerHigh : root.cSurfaceContainerHigh
+        color: mouse.containsMouse ? Qt.lighter(root.cSurfaceContainerHigh, 1.03) : root.cSurfaceContainerHigh
         border.width: 1
-        border.color: Qt.rgba(actionRoot.accent.r, actionRoot.accent.g, actionRoot.accent.b, 0.18)
+        border.color: Qt.rgba(actionRoot.accent.r, actionRoot.accent.g, actionRoot.accent.b, 0.22)
         implicitHeight: 84
+        scale: mouse.pressed ? 0.985 : mouse.containsMouse ? 1.01 : 1.0
+
+        Behavior on scale {
+            NumberAnimation { duration: 180; easing.bezierCurve: [0.22, 1.0, 0.36, 1.0] }
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -572,6 +588,8 @@ PanelWindow {
         required property color accent
         radius: 16
         color: root.cSurfaceContainerHigh
+        border.width: 1
+        border.color: Qt.rgba(metricRoot.accent.r, metricRoot.accent.g, metricRoot.accent.b, 0.14)
         implicitHeight: 52
 
         RowLayout {
@@ -620,7 +638,7 @@ PanelWindow {
         radius: 18
         color: root.cSurfaceContainerHigh
         border.width: 1
-        border.color: Qt.rgba(accent.r, accent.g, accent.b, 0.14)
+        border.color: Qt.rgba(accent.r, accent.g, accent.b, 0.18)
         implicitHeight: 74
 
         ColumnLayout {

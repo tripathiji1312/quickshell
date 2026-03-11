@@ -10,14 +10,14 @@ Rectangle {
     property var pywal
     
     // Color tokens
-    readonly property color surfaceColor: pywal ? Qt.lighter(pywal.background, 1.15) : "#1e1e2e"
-    readonly property color textColor: pywal ? pywal.foreground : "#e6e6e6"
-    readonly property color textDim: pywal ? Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.5) : "#808080"
+    readonly property color surfaceColor: pywal ? pywal.surfaceContainerHigh : "#111111"
+    readonly property color textColor: pywal ? pywal.foreground : "#dddddd"
+    readonly property color textDim: pywal ? Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.5) : Qt.rgba(0.5, 0.5, 0.5, 0.5)
     
     Layout.fillWidth: true
-    Layout.preferredHeight: 72
+    Layout.preferredHeight: 86
     
-    radius: 16
+    radius: 24
     color: surfaceColor
     
     Behavior on color {
@@ -41,7 +41,7 @@ Rectangle {
             icon: "󰘚"
             label: "CPU"
             value: (root.systemUsage.cpuPerc ?? 0) * 100
-            accentColor: root.pywal?.error ?? "#f38ba8"
+            accentColor: root.pywal?.error ?? Qt.rgba(1, 0.3, 0.3, 1)
         }
         
         Item { Layout.fillWidth: true }
@@ -59,7 +59,7 @@ Rectangle {
             icon: "󰍛"
             label: "RAM"
             value: (root.systemUsage.memPerc ?? 0) * 100
-            accentColor: root.pywal?.warning ?? "#fab387"
+            accentColor: root.pywal?.warning ?? Qt.rgba(1, 0.6, 0.3, 1)
         }
         
         Item { Layout.fillWidth: true }
@@ -76,7 +76,7 @@ Rectangle {
             icon: "󰋊"
             label: "Disk"
             value: (root.systemUsage.diskPerc ?? 0) * 100
-            accentColor: root.pywal?.info ?? "#89b4fa"
+            accentColor: root.pywal?.info ?? Qt.rgba(0.5, 0.7, 1.0, 1)
         }
         
         Item { Layout.fillWidth: true }
@@ -99,7 +99,7 @@ Rectangle {
             icon: "󰢮"
             label: "GPU"
             value: root.systemUsage.gpuUsage ?? 0
-            accentColor: root.pywal?.success ?? "#a6e3a1"
+            accentColor: root.pywal?.success ?? Qt.rgba(0.5, 0.9, 0.5, 1)
         }
         
         Item { 
@@ -144,9 +144,9 @@ Rectangle {
         // Progress bar
         Rectangle {
             Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: 48
-            Layout.preferredHeight: 3
-            radius: 1.5
+            Layout.preferredWidth: 56
+            Layout.preferredHeight: 4
+            radius: 2
             color: Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.1)
             
             Rectangle {
@@ -169,7 +169,7 @@ Rectangle {
             Layout.alignment: Qt.AlignHCenter
             text: label
             font.family: "Inter"
-            font.pixelSize: 10
+            font.pixelSize: 11
             font.weight: Font.Medium
             color: root.textDim
         }

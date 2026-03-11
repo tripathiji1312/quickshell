@@ -42,7 +42,7 @@ QtObject {
     // Island styling
     readonly property var islands: QtObject {
         property int borderRadius: 18              // Smaller pill radius
-        property real glassOpacity: 0.92           // Slightly more solid
+        property real surfaceOpacity: 1.0           // Solid surface
         property real borderOpacity: 0.12          // Subtle border glow
         property int spacing: 6                    // Tighter gap between elements
     }

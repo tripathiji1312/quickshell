@@ -334,7 +334,7 @@ PanelWindow {
                         height: contentLayout.implicitHeight + 28
                         radius: 20
                         
-                        // Soft frosted glass surface
+                        // Notification card surface
                         color: root.m3Surface
                             border.width: 1
                             border.color: {

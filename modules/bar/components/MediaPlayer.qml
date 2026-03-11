@@ -112,12 +112,7 @@ Item {
                 width: 16
                 height: 16
                 radius: 8
-                
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: "#2a2a2a" }
-                    GradientStop { position: 0.5; color: "#1a1a1a" }
-                    GradientStop { position: 1.0; color: "#0a0a0a" }
-                }
+                color: Pywal.surfaceContainerLow
                 
                 rotation: 0
                 
@@ -228,13 +223,7 @@ Item {
             Layout.preferredHeight: 12
             Layout.alignment: Qt.AlignVCenter
             radius: 0.5
-            
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: "transparent" }
-                GradientStop { position: 0.3; color: Qt.rgba(Pywal.foreground.r, Pywal.foreground.g, Pywal.foreground.b, 0.2) }
-                GradientStop { position: 0.7; color: Qt.rgba(Pywal.foreground.r, Pywal.foreground.g, Pywal.foreground.b, 0.2) }
-                GradientStop { position: 1.0; color: "transparent" }
-            }
+            color: Qt.rgba(Pywal.foreground.r, Pywal.foreground.g, Pywal.foreground.b, 0.18)
         }
         
         // Controls - Fixed with proper click handling
@@ -282,11 +271,7 @@ Item {
                 Layout.preferredWidth: 24
                 Layout.preferredHeight: 24
                 radius: 12
-                
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.lighter(Pywal.primary, playArea.containsMouse ? 1.15 : 1.0) }
-                    GradientStop { position: 1.0; color: Qt.darker(Pywal.primary, playArea.containsMouse ? 1.0 : 1.1) }
-                }
+                color: playArea.containsMouse ? Qt.lighter(Pywal.primary, 1.08) : Pywal.primary
                 
                 Behavior on scale { NumberAnimation { duration: 80 } }
                 scale: playArea.pressed ? 0.85 : (playArea.containsMouse ? 1.05 : 1.0)
@@ -311,7 +296,7 @@ Item {
                     text: root.isPlaying ? "󰏤" : "󰐊"
                     font.family: "Material Design Icons"
                     font.pixelSize: 14
-                    color: "#ffffff"
+                    color: Pywal.onPrimary
                 }
                 
                 MouseArea {
@@ -381,12 +366,7 @@ Item {
                     anchors.bottom: parent.bottom
                     width: parent.width * root.progressPercent
                     radius: 2
-                    
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0.0; color: Qt.darker(Pywal.primary, 1.2) }
-                        GradientStop { position: 1.0; color: Pywal.primary }
-                    }
+                    color: Pywal.primary
                     
                     Behavior on width {
                         NumberAnimation { duration: 200 }
@@ -400,7 +380,7 @@ Item {
                         width: 6
                         height: 6
                         radius: 3
-                        color: "#ffffff"
+                        color: Pywal.onPrimary
                         
                         SequentialAnimation on scale {
                             running: root.isPlaying

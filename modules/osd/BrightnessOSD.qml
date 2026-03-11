@@ -36,8 +36,8 @@ PanelWindow {
         right: 12
     }
     
-    implicitWidth: 250
-    implicitHeight: 45
+    implicitWidth: 286
+    implicitHeight: 60
     color: "transparent"
     
     mask: Region { item: container }
@@ -73,21 +73,15 @@ PanelWindow {
     Rectangle {
         id: container
         anchors.fill: parent
-        radius: 16
-        
-        color: Qt.rgba(
-            pywal?.background?.r ?? 0.1, 
-            pywal?.background?.g ?? 0.1, 
-            pywal?.background?.b ?? 0.1, 
-            0.95
-        )
+        radius: 22
+        color: pywal.surfaceContainerHighest
         border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.1)
+        border.color: pywal.outlineVariant
         
         opacity: root.showing ? 1.0 : 0.0
-        scale: root.showing ? 1.0 : 0.9
+        scale: root.showing ? 1.0 : 0.94
         transformOrigin: Item.Center
-        
+
         Behavior on opacity {
             NumberAnimation { 
                 duration: Material3Anim.short4
@@ -104,29 +98,29 @@ PanelWindow {
         
         RowLayout {
             anchors.fill: parent
-            anchors.margins: 12
-            spacing: 12
+            anchors.margins: 16
+            spacing: 14
             
             // Icon - Material Design Icons
             Text {
                 text: root.currentBrightness > 66 ? "󰃠" : (root.currentBrightness > 33 ? "󰃟" : "󰃞")
                 font.family: "Material Design Icons"
-                color: pywal.primary
-                font.pixelSize: 20
+                color: pywal.warning
+                font.pixelSize: 22
             }
             
             // Bar
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 6
-                radius: 3
-                color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.15)
+                Layout.preferredHeight: 10
+                radius: 5
+                color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.12)
                 
                 Rectangle {
                     width: parent.width * (root.currentBrightness / 100)
                     height: parent.height
-                    radius: 3
-                    color: pywal.primary
+                    radius: 5
+                    color: pywal.warning
                     
                     Behavior on width {
                         NumberAnimation { 
@@ -135,6 +129,17 @@ PanelWindow {
                         }
                     }
                 }
+
+                Rectangle {
+                    width: 12
+                    height: 12
+                    radius: 6
+                    x: Math.max(0, Math.min(parent.width - width, parent.width * (root.currentBrightness / 100) - width / 2))
+                    y: (parent.height - height) / 2
+                    color: pywal.warning
+                    border.width: 2
+                    border.color: pywal.surfaceContainerHighest
+                }
             }
             
             // Text
@@ -142,9 +147,9 @@ PanelWindow {
                 text: root.currentBrightness + "%"
                 color: pywal.foreground
                 font.family: "Inter"
-                font.pixelSize: 13
+                font.pixelSize: 14
                 font.weight: Font.DemiBold
-                Layout.preferredWidth: 36
+                Layout.preferredWidth: 42
                 horizontalAlignment: Text.AlignRight
             }
         }

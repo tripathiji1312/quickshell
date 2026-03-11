@@ -6,6 +6,7 @@ import Quickshell.Wayland
 import Quickshell.Widgets
 import "../../config" as QsConfig
 import "../../services" as QsServices
+import "../../components"
 
 PanelWindow {
     id: root
@@ -16,13 +17,13 @@ PanelWindow {
 
     readonly property var config: QsConfig.Config
     readonly property var pywal: QsServices.Pywal
-    readonly property color cSurface: Qt.rgba(pywal.background.r, pywal.background.g, pywal.background.b, 0.94)
-    readonly property color cSurfaceContainer: Qt.lighter(pywal.background, 1.12)
-    readonly property color cSurfaceContainerHigh: Qt.lighter(pywal.background, 1.2)
+    readonly property color cSurface: pywal.surfaceContainerHighest
+    readonly property color cSurfaceContainer: pywal.surfaceContainerHigh
+    readonly property color cSurfaceContainerHigh: pywal.surfaceContainerHigh
     readonly property color cPrimary: pywal.primary
     readonly property color cText: pywal.foreground
-    readonly property color cSubText: Qt.rgba(cText.r, cText.g, cText.b, 0.65)
-    readonly property color cBorder: Qt.rgba(cText.r, cText.g, cText.b, 0.08)
+    readonly property color cSubText: pywal.onSurfaceMuted
+    readonly property color cBorder: pywal.outlineVariant
     readonly property var terminalCommand: Array.isArray(config.launcher.terminalCommand) && config.launcher.terminalCommand.length > 0
         ? config.launcher.terminalCommand
         : ["foot"]
@@ -193,11 +194,11 @@ PanelWindow {
         left: true
     }
     margins {
-        top: (config.bar.height ?? 34) + 18
+        top: (config.bar.height ?? 34) + 22
         left: Math.max(0, Math.round((screen.width - root.implicitWidth) / 2))
     }
     implicitWidth: config.launcher.width
-    implicitHeight: shouldShow || panel.opacity > 0 ? panelColumn.implicitHeight + 32 : 0
+    implicitHeight: shouldShow || panel.opacity > 0 ? panelColumn.implicitHeight + 40 : 0
     color: "transparent"
     visible: config.launcher.enabled && (shouldShow || panel.opacity > 0)
 
@@ -206,9 +207,11 @@ PanelWindow {
     FocusScope {
         id: panel
         anchors.fill: parent
-        scale: shouldShow ? 1.0 : 0.96
+        property real revealOffset: shouldShow ? 0 : -20
+        scale: shouldShow ? 1.0 : 0.97
         opacity: shouldShow ? 1.0 : 0.0
         focus: root.shouldShow
+        transform: Translate { y: panel.revealOffset }
 
         Keys.onEscapePressed: root.closeLauncher()
         Keys.onDownPressed: root.selectedIndex = Math.min(root.selectedIndex + 1, root.visibleEntries.length - 1)
@@ -217,38 +220,50 @@ PanelWindow {
         Keys.onEnterPressed: root.launchEntry(root.visibleEntries[root.selectedIndex])
 
         Behavior on scale {
-            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: 240; easing.bezierCurve: [0.22, 1.0, 0.36, 1.0] }
         }
 
         Behavior on opacity {
-            NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+            NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
         }
 
-        Rectangle {
+        Behavior on revealOffset {
+            NumberAnimation { duration: 260; easing.bezierCurve: [0.05, 0.7, 0.1, 1.0] }
+        }
+
+        AuroraSurface {
             anchors.fill: parent
             radius: 28
             color: root.cSurface
-            border.width: 1
-            border.color: root.cBorder
+            strokeColor: root.cBorder
+            accentColor: root.cPrimary
+            elevation: 4
+            highlighted: root.shouldShow
 
             ColumnLayout {
                 id: panelColumn
                 anchors.fill: parent
-                anchors.margins: 16
-                spacing: 14
+                anchors.margins: 18
+                spacing: 16
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 58
-                    radius: 20
+                    Layout.preferredHeight: 62
+                    radius: 22
                     color: root.cSurfaceContainer
                     border.width: 1
-                    border.color: Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, 0.14)
+                    border.color: Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, 0.18)
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: parent.radius
+                        color: Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, 0.04)
+                    }
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.margins: 14
-                        spacing: 10
+                        anchors.margins: 16
+                        spacing: 12
 
                         Text {
                             text: query.trim().startsWith(">") ? "󰘳" : "󰍉"
@@ -332,20 +347,28 @@ PanelWindow {
                                 required property int index
 
                                 width: listColumn.width
-                                height: 62
-                                radius: 18
+                                height: 66
+                                radius: 20
                                 color: root.selectedIndex === index
-                                    ? Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, 0.14)
+                                    ? Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, 0.18)
                                     : hovered.hovered
                                         ? root.cSurfaceContainerHigh
                                         : root.cSurfaceContainer
                                 border.width: 1
                                 border.color: root.selectedIndex === index
-                                    ? Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, 0.30)
-                                    : Qt.rgba(root.cText.r, root.cText.g, root.cText.b, 0.04)
+                                    ? Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, 0.34)
+                                    : Qt.rgba(root.cText.r, root.cText.g, root.cText.b, 0.10)
+                                scale: hovered.hovered ? 1.02 : 1.0
 
-                                Behavior on color { ColorAnimation { duration: 120 } }
-                                Behavior on border.color { ColorAnimation { duration: 120 } }
+                                Behavior on color { ColorAnimation { duration: 160 } }
+                                Behavior on border.color { ColorAnimation { duration: 160 } }
+                                Behavior on scale { NumberAnimation { duration: 180; easing.bezierCurve: [0.22, 1.0, 0.36, 1.0] } }
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: parent.radius
+                                    color: Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, root.selectedIndex === index ? 0.05 : hovered.hovered ? 0.03 : 0)
+                                }
 
                                 HoverHandler { id: hovered }
 

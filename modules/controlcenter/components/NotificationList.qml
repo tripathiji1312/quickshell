@@ -11,12 +11,12 @@ Rectangle {
     property var pywal
     
     // Solid color tokens from pywal
-    readonly property color surfaceColor: pywal ? pywal.surfaceContainerLow : "#1e1e2e"
-    readonly property color surfaceVariant: pywal ? pywal.surfaceContainerHigh : "#2a2a3a"
-    readonly property color textColor: pywal ? pywal.foreground : "#e6e6e6"
-    readonly property color textVariant: pywal ? Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.72) : "#a0a0a0"
-    readonly property color accentColor: pywal ? pywal.primary : "#a6e3a1"
-    readonly property color borderColor: pywal ? Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.08) : "#333333"
+    readonly property color surfaceColor: pywal ? pywal.surfaceContainerLow : "#111111"
+    readonly property color surfaceVariant: pywal ? pywal.surfaceContainerHigh : "#1a1a1a"
+    readonly property color textColor: pywal ? pywal.foreground : "#dddddd"
+    readonly property color textVariant: pywal ? Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.72) : "#999999"
+    readonly property color accentColor: pywal ? pywal.primary : "#88cc88"
+    readonly property color borderColor: pywal ? Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.08) : "#222222"
     
     Layout.fillWidth: true
     Layout.fillHeight: true

@@ -1,0 +1,9 @@
+[32m  INFO[0m: Launching config: "/home/tripathiji/.config/quickshell/shell.qml"
+[32m  INFO[0m: Shell ID: "e19bfeebeefc3c23c7986b1367974897" Path ID "e19bfeebeefc3c23c7986b1367974897"
+[32m  INFO[0m: Saving logs to "/run/user/1000/quickshell/by-id/s92u3hbnbt/log.qslog"
+[31m ERROR[0m: Failed to load configuration
+[31m ERROR[0m:   caused by @shell.qml[54:5]: Type Wrapper unavailable
+[31m ERROR[0m:   caused by @modules/osd/Wrapper.qml[9:5]: Type VolumeOSD unavailable
+[31m ERROR[0m:   caused by @modules/osd/VolumeOSD.qml[112:9]: Cannot assign to non-existent property "border"
+
+END

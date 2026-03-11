@@ -1,5 +1,6 @@
 module qs.components
 Anim 1.0 Anim.qml
+AuroraSurface 1.0 AuroraSurface.qml
 Elevation 1.0 Elevation.qml
 IconButton 1.0 IconButton.qml
 Material3Popup 1.0 Material3Popup.qml

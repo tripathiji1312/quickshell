@@ -3,6 +3,7 @@ import QtQuick 6.10
 import QtQuick.Layouts 6.10
 import QtQuick.Effects
 import "components" as BarComponents
+import "../../components"
 import "../../components/effects"
 import "../../config" as QsConfig
 import "../../services" as QsServices
@@ -36,26 +37,26 @@ Item {
         id: barContainer
         anchors.fill: parent
         anchors.topMargin: 1
-        anchors.leftMargin: 9
-        anchors.rightMargin: 9
+        anchors.leftMargin: 11
+        anchors.rightMargin: 11
         anchors.bottomMargin: 1
         
         // ═══════════════════════════════════════════════════════════════
         // LEFT MODULE - Workspaces
         // ═══════════════════════════════════════════════════════════════
-        Rectangle {
+        AuroraSurface {
             id: leftModule
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            height: 28
-            width: leftContent.implicitWidth + 16
+            height: 32
+            width: leftContent.implicitWidth + 18
             
-            radius: 14
-            color: pywal.surfaceContainer
-            
-            // Elegant shadow simulation with subtle border
-            border.width: 1
-            border.color: Qt.rgba(0, 0, 0, 0.15)
+            radius: 20
+            color: pywal.surfaceContainerHigh
+            strokeColor: pywal.outlineVariant
+            borderWidth: 0
+            accentColor: pywal.primary
+            elevation: 3
             
             // Smooth transitions
             Behavior on color {
@@ -64,21 +65,6 @@ Item {
             
             Behavior on width {
                 NumberAnimation { duration: 350; easing.bezierCurve: [0.34, 1.56, 0.64, 1] }
-            }
-            
-            // Top highlight for depth
-            Rectangle {
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.margins: 1
-                height: parent.height / 2
-                radius: parent.radius - 1
-                
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.04) }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
             }
             
             RowLayout {
@@ -107,36 +93,23 @@ Item {
         // ═══════════════════════════════════════════════════════════════
         // CENTER MODULE - Clock (Focal Point)
         // ═══════════════════════════════════════════════════════════════
-        Rectangle {
+        AuroraSurface {
             id: centerModule
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
-            height: 28
-            width: clockLoader.implicitWidth + 20
+            height: 32
+            width: clockLoader.implicitWidth + 22
             
-            radius: 14
-            color: pywal.surfaceContainer
-            
-            border.width: 1
-            border.color: Qt.rgba(0, 0, 0, 0.15)
+            radius: 20
+            color: pywal.surfaceContainerHighest
+            strokeColor: pywal.outlineVariant
+            borderWidth: 0
+            accentColor: pywal.primary
+            elevation: 4
+            highlighted: true
             
             Behavior on color {
                 ColorAnimation { duration: 400; easing.type: Easing.OutCubic }
-            }
-            
-            // Top highlight
-            Rectangle {
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.margins: 1
-                height: parent.height / 2
-                radius: parent.radius - 1
-                
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.04) }
-                    GradientStop { position: 1.0; color: "transparent" }
-                }
             }
             
             Loader {
@@ -189,34 +162,22 @@ Item {
             spacing: 6
             
             // ═══ PILL 1: Network + Bluetooth (Connectivity) ═══
-            Rectangle {
+            AuroraSurface {
                 id: connectivityPill
-                height: 28
-                width: connectivityContent.implicitWidth + 16
-                radius: 14
-                color: pywal.surfaceContainer
-                border.width: 1
-                border.color: Qt.rgba(0, 0, 0, 0.15)
+                height: 32
+                width: connectivityContent.implicitWidth + 18
+                radius: 20
+                color: pywal.surfaceContainerHigh
+                strokeColor: pywal.outlineVariant
+                borderWidth: 0
+                accentColor: pywal.info
+                elevation: 3
                 
                 Behavior on color {
                     ColorAnimation { duration: 300 }
                 }
                 Behavior on width {
                     NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
-                }
-                
-                // Highlight
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.margins: 1
-                    height: parent.height / 2
-                    radius: parent.radius - 1
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.04) }
-                        GradientStop { position: 1.0; color: "transparent" }
-                    }
                 }
                 
                 Row {
@@ -282,34 +243,22 @@ Item {
             }
             
             // ═══ PILL 2: Brightness + Volume (Audio/Display) ═══
-            Rectangle {
+            AuroraSurface {
                 id: audioPill
-                height: 28
-                width: audioContent.implicitWidth + 16
-                radius: 14
-                color: pywal.surfaceContainer
-                border.width: 1
-                border.color: Qt.rgba(0, 0, 0, 0.15)
+                height: 32
+                width: audioContent.implicitWidth + 18
+                radius: 20
+                color: pywal.surfaceContainerHigh
+                strokeColor: pywal.outlineVariant
+                borderWidth: 0
+                accentColor: pywal.secondary
+                elevation: 3
                 
                 Behavior on color {
                     ColorAnimation { duration: 300 }
                 }
                 Behavior on width {
                     NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
-                }
-                
-                // Highlight
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.margins: 1
-                    height: parent.height / 2
-                    radius: parent.radius - 1
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.04) }
-                        GradientStop { position: 1.0; color: "transparent" }
-                    }
                 }
                 
                 Row {
@@ -375,34 +324,22 @@ Item {
             }
             
             // ═══ PILL 3: Battery + Control Center + Tray ═══
-            Rectangle {
+            AuroraSurface {
                 id: powerPill
-                height: 28
-                width: powerContent.implicitWidth + 16
-                radius: 14
-                color: pywal.surfaceContainer
-                border.width: 1
-                border.color: Qt.rgba(0, 0, 0, 0.15)
+                height: 32
+                width: powerContent.implicitWidth + 18
+                radius: 20
+                color: pywal.surfaceContainerHigh
+                strokeColor: pywal.outlineVariant
+                borderWidth: 0
+                accentColor: pywal.primary
+                elevation: 3
                 
                 Behavior on color {
                     ColorAnimation { duration: 300 }
                 }
                 Behavior on width {
                     NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
-                }
-                
-                // Highlight
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.margins: 1
-                    height: parent.height / 2
-                    radius: parent.radius - 1
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.04) }
-                        GradientStop { position: 1.0; color: "transparent" }
-                    }
                 }
                 
                 Row {
@@ -517,19 +454,20 @@ Item {
         // ═══════════════════════════════════════════════════════════════
         // MEDIA MODULE - Always visible (shows "No media" when not playing)
         // ═══════════════════════════════════════════════════════════════
-        Rectangle {
+        AuroraSurface {
             id: mediaModule
             anchors.left: leftModule.right
             anchors.leftMargin: 8
             anchors.verticalCenter: parent.verticalCenter
-            height: 28
-            width: mediaPlayerLoader.implicitWidth + 16
+            height: 32
+            width: mediaPlayerLoader.implicitWidth + 18
             
-            radius: 14
-            color: pywal.surfaceContainer
-            
-            border.width: 1
-            border.color: Qt.rgba(0, 0, 0, 0.15)
+            radius: 20
+            color: pywal.surfaceContainerHigh
+            strokeColor: pywal.outlineVariant
+            borderWidth: 0
+            accentColor: pywal.secondary
+            elevation: 3
             
             clip: true
             
@@ -537,21 +475,6 @@ Item {
                 NumberAnimation { 
                     duration: 400
                     easing.bezierCurve: [0.34, 1.56, 0.64, 1]
-                }
-            }
-            
-            // Top highlight
-            Rectangle {
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.margins: 1
-                height: parent.height / 2
-                radius: parent.radius - 1
-                
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.04) }
-                    GradientStop { position: 1.0; color: "transparent" }
                 }
             }
             

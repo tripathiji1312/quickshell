@@ -2,45 +2,45 @@ import QtQuick 6.10
 
 QtObject {
     readonly property var rounding: QtObject {
-        property int small: 4
-        property int medium: 8
-        property int large: 12
-        property int extraLarge: 16
+        property int small: 8
+        property int medium: 14
+        property int large: 20
+        property int extraLarge: 30
         property int full: 9999
     }
 
     // Standardized radius (Material 3)
     readonly property var radius: QtObject {
-        property int xs: 4
-        property int s: 8
-        property int m: 12
-        property int l: 16
-        property int xl: 28
+        property int xs: 6
+        property int s: 10
+        property int m: 16
+        property int l: 22
+        property int xl: 32
         property int full: 9999
     }
 
     readonly property var spacing: QtObject {
-        property int tiny: 2
-        property int small: 4
-        property int medium: 8
-        property int large: 12
-        property int huge: 16
+        property int tiny: 4
+        property int small: 8
+        property int medium: 12
+        property int large: 16
+        property int huge: 24
     }
 
     readonly property var margins: QtObject {
-        property int xs: 4
-        property int s: 8
-        property int m: 12
-        property int l: 16
-        property int xl: 24
+        property int xs: 6
+        property int s: 10
+        property int m: 14
+        property int l: 20
+        property int xl: 28
     }
 
     readonly property var padding: QtObject {
-        property int tiny: 2
-        property int small: 4
-        property int medium: 8
-        property int large: 12
-        property int huge: 16
+        property int tiny: 4
+        property int small: 8
+        property int medium: 12
+        property int large: 16
+        property int huge: 22
     }
 
     readonly property var font: QtObject {
@@ -79,35 +79,37 @@ QtObject {
     readonly property var anim: QtObject {
         readonly property var durations: QtObject {
             property int instant: 0
-            property int fast: 150
-            property int normal: 200
-            property int medium: 250
-            property int slow: 350
-            property int slower: 500
+            property int fast: 120
+            property int normal: 180
+            property int medium: 260
+            property int slow: 340
+            property int slower: 460
         }
 
         readonly property var curves: QtObject {
-            // Standard Material Design easing curves
             property var standard: [0.2, 0.0, 0, 1.0]
             property var standardDecel: [0.0, 0.0, 0, 1.0]
             property var standardAccel: [0.3, 0.0, 1, 1.0]
             property var emphasizedDecel: [0.05, 0.7, 0.1, 1.0]
             property var emphasizedAccel: [0.3, 0.0, 0.8, 0.15]
+            property var springGentle: [0.22, 1.0, 0.36, 1.0]
+            property var springExpressive: [0.34, 1.56, 0.64, 1.0]
         }
         
         readonly property var easing: QtObject {
             property int standard: Easing.OutCubic
-            property int emphasized: Easing.OutBack
+            property int emphasized: Easing.OutCubic
             property int sharp: Easing.InOutQuad
             property int smooth: Easing.InOutCubic
+            property int spring: Easing.OutBack
         }
     }
 
     readonly property var transparency: QtObject {
         property real full: 1.0
-        property real high: 0.87
-        property real medium: 0.60
-        property real low: 0.38
-        property real minimal: 0.12
+        property real high: 0.92
+        property real medium: 0.68
+        property real low: 0.42
+        property real minimal: 0.14
     }
 }

@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Wayland
 import "../../config" as QsConfig
 import "../../services" as QsServices
+import "../../components"
 
 PanelWindow {
     id: root
@@ -14,13 +15,13 @@ PanelWindow {
     readonly property var config: QsConfig.Config
     readonly property var pywal: QsServices.Pywal
     readonly property var notifs: QsServices.Notifs
-    readonly property color cSurface: Qt.rgba(pywal.background.r, pywal.background.g, pywal.background.b, 0.96)
-    readonly property color cSurfaceContainer: Qt.lighter(pywal.background, 1.12)
-    readonly property color cSurfaceContainerHigh: Qt.lighter(pywal.background, 1.2)
+    readonly property color cSurface: pywal.surfaceContainerHighest
+    readonly property color cSurfaceContainer: pywal.surfaceContainerHigh
+    readonly property color cSurfaceContainerHigh: pywal.surfaceContainerHigh
     readonly property color cPrimary: pywal.primary
     readonly property color cText: pywal.foreground
-    readonly property color cSubText: Qt.rgba(cText.r, cText.g, cText.b, 0.68)
-    readonly property color cBorder: Qt.rgba(cText.r, cText.g, cText.b, 0.08)
+    readonly property color cSubText: pywal.onSurfaceMuted
+    readonly property color cBorder: pywal.outlineVariant
     readonly property var visibleNotifications: (notifs.recentNotifications ?? []).slice(0, config.sidebar.maxHistory)
 
     function closeSidebar() {
@@ -69,31 +70,39 @@ PanelWindow {
     FocusScope {
         id: panel
         anchors.fill: parent
-        scale: shouldShow ? 1.0 : 0.97
+        property real revealOffset: shouldShow ? 0 : 18
+        scale: shouldShow ? 1.0 : 0.975
         opacity: shouldShow ? 1.0 : 0.0
         focus: root.shouldShow
+        transform: Translate { x: panel.revealOffset }
 
         Keys.onEscapePressed: root.closeSidebar()
 
         Behavior on scale {
-            NumberAnimation { duration: 170; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: 220; easing.bezierCurve: [0.22, 1.0, 0.36, 1.0] }
         }
 
         Behavior on opacity {
-            NumberAnimation { duration: 140; easing.type: Easing.OutQuad }
+            NumberAnimation { duration: 180; easing.type: Easing.OutQuad }
         }
 
-        Rectangle {
+        Behavior on revealOffset {
+            NumberAnimation { duration: 240; easing.bezierCurve: [0.05, 0.7, 0.1, 1.0] }
+        }
+
+        AuroraSurface {
             anchors.fill: parent
             radius: 26
             color: root.cSurface
-            border.width: 1
-            border.color: root.cBorder
+            strokeColor: root.cBorder
+            accentColor: root.cPrimary
+            elevation: 4
+            highlighted: root.shouldShow
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 16
-                spacing: 14
+                anchors.margins: 18
+                spacing: 16
 
                 RowLayout {
                     Layout.fillWidth: true
