@@ -9,7 +9,6 @@ Item {
     id: root
     
     property var barWindow
-    property var brightnessPopup  // Kept for compatibility but not used
     
     readonly property var pywal: QsServices.Pywal
     readonly property var brightness: QsServices.Brightness
