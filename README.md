@@ -24,12 +24,21 @@ The project focuses on:
 - [Hyprland Integration](#hyprland-integration)
 - [Project Layout](#project-layout)
 - [Troubleshooting](#troubleshooting)
-- [Development Notes](#development-notes)
+- [Contributing & Code of Conduct](#contributing--code-of-conduct)
 - [License](#license)
+- [Security](#security)
 
-## Screenshots
 
-| Main Desktop | Control Center + Popups | Notifications |
+## Contributing & Code of Conduct
+
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines, PR process, and testing instructions.
+- See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for expected community behavior and reporting guidance.
+
+## Security
+
+- See [SECURITY.md](SECURITY.md) for how to report security vulnerabilities and the project's response process.
+- Preferred disclosure path: GitHub Security Advisories. Do not publicly disclose confirmed vulnerabilities until a fix or coordinated disclosure is available.
+
 |:------------:|:------------------------:|:-------------:|
 | ![Desktop](./image_quick/main_config.png) | ![Control Center](./image_quick/bluetooth.png) | ![Notifications](./image_quick/notification.png) |
 

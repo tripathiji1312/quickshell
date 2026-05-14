@@ -3,7 +3,7 @@ name: Custom Report
 about: Configuration help, compatibility reports, documentation gaps, performance issues, or general feedback
 title: ""
 labels: question
-assignees: tripathiji1312
+assignees: ''
 ---
 
 <!--
@@ -11,6 +11,8 @@ assignees: tripathiji1312
   Common uses: setup assistance, compositor compatibility, documentation improvements,
   performance observations, or general project feedback.
 -->
+
+<!-- If your report contains a security vulnerability, please follow SECURITY.md and report via GitHub Security Advisories. -->
 
 ## Issue Type
 

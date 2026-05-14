@@ -3,7 +3,7 @@ name: Feature Request
 about: Propose a new module, widget, configuration option, or improvement
 title: "feat: "
 labels: enhancement
-assignees: tripathiji1312
+assignees: ''
 ---
 
 <!--
@@ -12,6 +12,8 @@ assignees: tripathiji1312
   - Consider whether the feature belongs in the shell config itself
     or in the upstream QuickShell toolkit
 -->
+
+<!-- For security-sensitive feature requests (e.g., cryptographic, privilege changes), consider opening a private discussion or following the Security Policy in SECURITY.md. -->
 
 ## Summary
 

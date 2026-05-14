@@ -3,7 +3,7 @@ name: Bug Report
 about: Report a reproducible bug or unexpected behaviour in quickshell
 title: "bug: "
 labels: bug
-assignees: tripathiji1312
+assignees: ''
 ---
 
 <!--
@@ -12,6 +12,8 @@ assignees: tripathiji1312
   - Confirm the issue reproduces on the latest commit on main
   - Fill out every section; incomplete reports may be closed without further investigation
 -->
+
+<!-- For security vulnerabilities, please follow the Security Policy in SECURITY.md and use GitHub Security Advisories for private disclosure. -->
 
 ## Description
 
