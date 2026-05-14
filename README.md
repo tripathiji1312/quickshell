@@ -39,7 +39,10 @@ The project focuses on:
 - See [SECURITY.md](SECURITY.md) for how to report security vulnerabilities and the project's response process.
 - Preferred disclosure path: GitHub Security Advisories. Do not publicly disclose confirmed vulnerabilities until a fix or coordinated disclosure is available.
 
-|:------------:|:------------------------:|:-------------:|
+## Screenshots
+
+| Main Desktop | Control Center + Popups | Notifications |
+|:-----------:|:------------------------:|:-------------:|
 | ![Desktop](./image_quick/main_config.png) | ![Control Center](./image_quick/bluetooth.png) | ![Notifications](./image_quick/notification.png) |
 
 ## Core Capabilities
