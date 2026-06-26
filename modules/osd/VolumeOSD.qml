@@ -64,27 +64,6 @@ PanelWindow {
         }
     }
 
-    Timer {
-        interval: 150
-        running: true
-        repeat: true
-        onTriggered: {
-            const volume = audio.percentage
-            const muted = audio.muted
-
-            root.currentVolume = volume
-            root.currentMuted = muted
-
-            if (prevVolume !== -1 && volume !== prevVolume)
-                root.show()
-            if (muted !== prevMuted)
-                root.show()
-
-            prevVolume = volume
-            prevMuted = muted
-        }
-    }
-
     Component.onCompleted: {
         root.currentVolume = audio.percentage
         root.currentMuted = audio.muted
