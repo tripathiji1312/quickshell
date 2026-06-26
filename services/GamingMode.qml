@@ -10,6 +10,8 @@ Singleton {
     
     property bool enabled: false
     property bool dndEnabled: false
+    property real previousBrightness: 0.5
+    property bool didSetBrightness: false
     
     // Performance settings
     readonly property string performanceGovernor: "performance"
@@ -21,6 +23,7 @@ Singleton {
         if (enabled) {
             // Save current DND state
             dndEnabled = notifs.dnd
+            didSetBrightness = false
             
             // Enable performance mode
             setCpuGovernor(performanceGovernor)
@@ -29,14 +32,22 @@ Singleton {
             notifs.dnd = true
             
             // Boost brightness (optional - can be customized)
-            if (brightness.brightness < 0.8)
+            if (brightness.brightness < 0.8) {
+                previousBrightness = brightness.brightness
                 brightness.setBrightness(1.0)
+                didSetBrightness = true
+            }
         } else {
             // Restore balanced mode
             setCpuGovernor(balancedGovernor)
             
-            // Restore DND state
-            notifs.dnd = dndEnabled
+            // Restore DND only if user hasn't manually changed it
+            if (notifs.dnd === true)
+                notifs.dnd = dndEnabled
+            
+            // Restore brightness only if gaming mode set it
+            if (didSetBrightness)
+                brightness.setBrightness(previousBrightness)
         }
     }
     

@@ -56,6 +56,8 @@ ShellRoot {
         pywal: root.pywal
     }
 
+    property bool focusModePreviousDnd: false
+
     BatteryMonitor {}
 
     Timer {
@@ -77,6 +79,20 @@ ShellRoot {
         function onDndChanged() {
             if (!notifs.dnd && QsServices.Settings.focusModeEnabled) {
                 QsServices.Settings.focusModeEnabled = false
+            }
+        }
+    }
+
+    Connections {
+        target: QsServices.Settings
+        function onFocusModeEnabledChanged() {
+            if (QsServices.Settings.focusModeEnabled) {
+                // Save previous DND state when enabling
+                root.focusModePreviousDnd = notifs.dnd
+            } else {
+                // Restore DND only if focus mode's state wasn't manually overridden
+                if (notifs.dnd === true)
+                    notifs.dnd = root.focusModePreviousDnd
             }
         }
     }

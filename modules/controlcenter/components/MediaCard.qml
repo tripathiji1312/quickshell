@@ -44,6 +44,8 @@ Rectangle {
     function updateArtUrl() {
         if (activePlayer && activePlayer.trackArtUrl && activePlayer.trackArtUrl !== "") {
             artUrl = activePlayer.trackArtUrl
+        } else {
+            artUrl = ""
         }
     }
     

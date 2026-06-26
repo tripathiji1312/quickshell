@@ -377,54 +377,6 @@ Item {
                         source: "components/Battery.qml"
                     }
 
-                    Rectangle {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 1
-                        height: 12
-                        radius: 0.5
-                        color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.12)
-                    }
-
-                    Loader {
-                        id: notifCenterLoader
-                        anchors.verticalCenter: parent.verticalCenter
-                        asynchronous: true
-                        source: "components/NotificationCenterToggle.qml"
-
-                        Binding {
-                            target: notifCenterLoader.item
-                            property: "sidebar"
-                            value: root.sidebar
-                            when: notifCenterLoader.status === Loader.Ready && root.sidebar !== undefined
-                            restoreMode: Binding.RestoreBinding
-                        }
-
-                        Binding {
-                            target: notifCenterLoader.item
-                            property: "controlCenter"
-                            value: root.controlCenter
-                            when: notifCenterLoader.status === Loader.Ready && root.controlCenter !== undefined
-                            restoreMode: Binding.RestoreBinding
-                        }
-
-                        Binding {
-                            target: notifCenterLoader.item
-                            property: "launcher"
-                            value: root.launcher
-                            when: notifCenterLoader.status === Loader.Ready && root.launcher !== undefined
-                            restoreMode: Binding.RestoreBinding
-                        }
-                    }
-                    
-                    // Separator
-                    Rectangle {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 1
-                        height: 12
-                        radius: 0.5
-                        color: Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.12)
-                    }
-                    
                     // Control Center Toggle
                     Loader {
                         id: controlCenterLoader

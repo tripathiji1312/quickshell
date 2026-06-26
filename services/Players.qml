@@ -32,11 +32,7 @@ Singleton {
                 break
             }
         }
-        // If no player is playing, use first one
-        if (!newActive && list.length > 0) {
-            newActive = list[0]
-        }
-        // Update active if changed
+        // Update active if changed (null when nothing is playing)
         if (active !== newActive) {
             active = newActive
         }
