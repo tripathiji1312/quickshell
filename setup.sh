@@ -33,6 +33,11 @@ if command -v pacman &> /dev/null; then
         "playerctl"
         "ttf-font-awesome"
         "ttf-jetbrains-mono-nerd"
+        "qt6-quickeffects"
+        "jq"
+        "wl-clipboard"
+        "wf-recorder"
+        "libnotify"
     )
 
     # Helper to check and install
