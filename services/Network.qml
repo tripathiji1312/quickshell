@@ -69,7 +69,6 @@ Singleton {
     }
     
     function isNetworkSaved(ssid: string): bool {
-        refreshSavedNetworks();
         return savedNetworks.includes(ssid);
     }
 

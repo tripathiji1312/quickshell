@@ -44,11 +44,18 @@ Singleton {
         enabled = !enabled
     }
     
+    readonly property var validGovernors: ["performance", "schedutil", "powersave", "ondemand", "conservative", "userspace"]
+    
     function setCpuGovernor(governor) {
+        if (!validGovernors.includes(governor)) {
+            QsServices.Logger.warn("GamingMode", `Invalid CPU governor: ${governor}`)
+            return
+        }
         QsServices.Logger.info("GamingMode", `Setting CPU governor to: ${governor}`)
         cpuGovernorProc.exec([
             "sh", "-c",
-            `echo ${governor} | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor`
+            "printf '%s' \"$1\" | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor",
+            "sh", governor
         ])
     }
     

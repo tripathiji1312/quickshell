@@ -104,7 +104,22 @@ else
     echo -e "${BLUE}ℹ️ Hyprland config not found at $HYPR_CONF. Skipping integration.${NC}"
 fi
 
-# 4. Make scripts executable
+# 4. Configure passwordless sudo for hardware access (optional)
+SUDOERS_DIR="/etc/sudoers.d"
+if [ -d "$SUDOERS_DIR" ]; then
+    if [ ! -f "$SUDOERS_DIR/quickshell-brightness" ]; then
+        echo -e "${BLUE}🔧 Configuring passwordless sudo for backlight control...${NC}"
+        echo "ALL ALL=(ALL) NOPASSWD: /usr/bin/tee /sys/class/backlight/*/brightness" | sudo tee "$SUDOERS_DIR/quickshell-brightness" > /dev/null
+        sudo chmod 440 "$SUDOERS_DIR/quickshell-brightness"
+    fi
+    if [ ! -f "$SUDOERS_DIR/quickshell-cpufreq" ]; then
+        echo -e "${BLUE}🔧 Configuring passwordless sudo for CPU governor control...${NC}"
+        echo "ALL ALL=(ALL) NOPASSWD: /usr/bin/tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor" | sudo tee "$SUDOERS_DIR/quickshell-cpufreq" > /dev/null
+        sudo chmod 440 "$SUDOERS_DIR/quickshell-cpufreq"
+    fi
+fi
+
+# 5. Make scripts executable
 chmod +x reload-quickshell.sh
 
 echo -e "${GREEN}✅ Setup complete! Run ./reload-quickshell.sh to start.${NC}"
