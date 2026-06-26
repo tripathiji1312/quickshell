@@ -12,17 +12,7 @@ Singleton {
     // Consumer visibility control - set to false to pause polling when UI is hidden
     property bool visible: true
     
-    // Active player should be the currently playing one, or first in list if none playing
-    property var active: {
-        // Find the first playing player
-        for (var i = 0; i < list.length; i++) {
-            if (list[i]?.isPlaying) {
-                return list[i]
-            }
-        }
-        // If no player is playing, return the first one
-        return list[0] ?? null
-    }
+    property var active: null
     
     // React to MPRIS player changes via Connections (event-driven)
     Connections {
@@ -51,6 +41,8 @@ Singleton {
             active = newActive
         }
     }
+    
+    Component.onCompleted: updateActivePlayer()
     
     // Fallback timer for edge cases (only runs when visible)
     Timer {
