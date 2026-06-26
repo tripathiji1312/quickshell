@@ -18,6 +18,7 @@ ShellRoot {
     readonly property var pywal: QsServices.Pywal
     readonly property var audio: QsServices.Audio
     readonly property var brightness: QsServices.Brightness
+    readonly property var gamingMode: QsServices.GamingMode
     
     // Only register as a notification daemon if explicitly enabled.
     // This avoids noisy warnings when another daemon is active.

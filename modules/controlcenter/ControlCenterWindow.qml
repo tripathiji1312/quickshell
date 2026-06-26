@@ -27,6 +27,7 @@ PanelWindow {
     readonly property var powerProfiles: QsServices.PowerProfiles
     readonly property var screenshot: QsServices.Screenshot
     readonly property var idleInhibitor: QsServices.IdleInhibitor
+    readonly property var gamingMode: QsServices.GamingMode
     
     // Process launchers for header buttons
     Process {
@@ -338,6 +339,18 @@ PanelWindow {
                                 onClicked: root.idleInhibitor.inhibited = !root.idleInhibitor.inhibited
                             }
                             
+                            QuickToggle {
+                                Layout.fillWidth: true
+                                icon: "󰾴"
+                                label: "Gaming Mode"
+                                subLabel: root.gamingMode.enabled ? "Performance" : "Balanced"
+                                active: root.gamingMode.enabled
+                                activeColor: pywal.success
+                                surfaceColor: root.cSurfaceContainerHigh
+                                textColor: root.cOnSurface
+                                onClicked: root.gamingMode.toggle()
+                            }
+
                             QuickToggle {
                                 Layout.fillWidth: true
                                 Layout.columnSpan: 2
