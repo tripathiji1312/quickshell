@@ -43,14 +43,15 @@ Item {
                 font.pixelSize: 12
                 font.weight: Font.Bold
                 font.family: "Inter"
+                opacity: 0.4
                 
-                // Subtle pulse animation
-                SequentialAnimation on opacity {
+                // Blinks once per second via timer instead of continuous animation
+                // to avoid constant GPU repaints
+                Timer {
+                    interval: 1000
                     running: true
-                    loops: Animation.Infinite
-                    
-                    NumberAnimation { to: 0.4; duration: 800; easing.type: Easing.InOutSine }
-                    NumberAnimation { to: 1.0; duration: 800; easing.type: Easing.InOutSine }
+                    repeat: true
+                    onTriggered: colonSeparator.opacity = colonSeparator.opacity === 1.0 ? 0.4 : 1.0
                 }
             }
             
