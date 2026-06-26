@@ -104,7 +104,8 @@ Singleton {
                 QsServices.Logger.info("Screenshot", `Saved: ${root.lastScreenshotPath}`)
                 
                 // Copy to clipboard using wl-copy with shell redirection
-                clipboardProc.exec(["sh", "-c", `wl-copy < "${root.lastScreenshotPath}"`])
+                var path = root.lastScreenshotPath
+                clipboardProc.exec(["sh", "-c", "wl-copy < \"$1\"", "sh", path])
                 
                 notifyProc.exec([
                     "notify-send",
@@ -184,7 +185,8 @@ Singleton {
     function copyLastScreenshot() {
         if (!lastScreenshotPath) return
 
-        copyProc.exec(["sh", "-c", `wl-copy < "${lastScreenshotPath}"`])
+        var path = lastScreenshotPath
+        copyProc.exec(["sh", "-c", "wl-copy < \"$1\"", "sh", path])
     }
     
     Process {
