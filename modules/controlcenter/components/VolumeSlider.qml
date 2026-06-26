@@ -1,152 +1,87 @@
 import QtQuick 6.10
 import QtQuick.Layouts 6.10
 import QtQuick.Controls 6.10
-import Quickshell
 import "../../../components/effects"
-import "../../../services" as QsServices
 
-Rectangle {
+Item {
     id: root
-    
+
     required property var audio
     property var pywal
-    
-    // Current volume value - use PipeWire audio service
+
     readonly property int currentVolume: audio.percentage
     readonly property bool isMuted: audio.muted
-    
-    // Solid color tokens
-    readonly property color surfaceColor: pywal ? pywal.surfaceContainerHighest : "#1a1a1a"
-    readonly property color textColor: pywal ? pywal.foreground : "#dddddd"
-    readonly property color accentColor: pywal ? pywal.primary : "#88cc88"
-    
+
+    readonly property color cSurface: pywal ? pywal.surfaceContainer : "#1a1a1a"
+    readonly property color cOnSurface: pywal ? pywal.foreground : "#dddddd"
+    readonly property color cPrimary: pywal ? pywal.primary : "#88cc88"
+
     Layout.fillWidth: true
-    Layout.preferredHeight: 54
-    
-    radius: 22
-    color: surfaceColor
-    border.width: 1
-    border.color: pywal ? pywal.outlineVariant : Qt.rgba(1, 1, 1, 0.12)
-    
-    Behavior on color {
-        ColorAnimation {
-            duration: Material3Anim.medium2
-            easing.bezierCurve: Material3Anim.standard
-        }
-    }
+    Layout.preferredHeight: 64
 
     RowLayout {
         anchors.fill: parent
-        spacing: 0
-        
-        // Mute Button
+        anchors.leftMargin: 20
+        anchors.rightMargin: 24
+        spacing: 16
+
+        // M3 Icon Button
         Rectangle {
-            id: muteBtn
-            Layout.preferredWidth: 52
-            Layout.fillHeight: true
-            radius: 20
-            color: muteMouse.containsMouse 
-                ? Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.1) 
-                : "transparent"
-            
-            Behavior on color {
-                ColorAnimation {
-                    duration: Material3Anim.short3
-                    easing.bezierCurve: Material3Anim.standard
-                }
-            }
-            
+            Layout.preferredWidth: 44; Layout.preferredHeight: 44; radius: 22
+            color: muteMouse.pressed ? Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.12) : muteMouse.containsMouse ? Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.08) : "transparent"
+            Behavior on color { ColorAnimation { duration: 150 } }
+            scale: muteMouse.pressed ? 0.92 : 1.0
+            Behavior on scale { NumberAnimation { duration: 100; easing.bezierCurve: Material3Anim.springGentle } }
+
             Text {
                 anchors.centerIn: parent
                 text: root.isMuted ? "󰝟" : (root.currentVolume > 66 ? "󰕾" : (root.currentVolume > 33 ? "󰖀" : "󰕿"))
-                font.family: "Material Design Icons"
-                font.pixelSize: 20
-                color: root.isMuted ? Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.5) : root.accentColor
-                
-                Behavior on color {
-                    ColorAnimation {
-                        duration: Material3Anim.short3
-                        easing.bezierCurve: Material3Anim.standard
-                    }
-                }
+                font.family: "Material Design Icons"; font.pixelSize: 24
+                color: root.isMuted ? Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.4) : root.cPrimary
+                Behavior on color { ColorAnimation { duration: 150 } }
             }
-            
-            MouseArea {
-                id: muteMouse
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                hoverEnabled: true
-                onClicked: root.audio.toggleMute()
-            }
+            MouseArea { id: muteMouse; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true; onClicked: root.audio.toggleMute() }
         }
-        
-        // Slider
+
         Slider {
             id: slider
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.rightMargin: 12
-            
-            from: 0
-            to: 100
-            value: root.currentVolume
-            live: false
-            
+            Layout.fillWidth: true; Layout.fillHeight: true
+            from: 0; to: 100; value: root.currentVolume; live: true
             onMoved: root.audio.setVolume(value / 100)
-            
+
             background: Rectangle {
-                x: slider.leftPadding
-                y: slider.topPadding + slider.availableHeight / 2 - height / 2
-                implicitWidth: 200
-                implicitHeight: 30
-                width: slider.availableWidth
-                height: implicitHeight
-                radius: 15
-                color: Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.08)
-                
-                // Progress fill
-                Rectangle {
-                    width: slider.visualPosition * parent.width
-                    height: parent.height
-                    radius: 15
-                    color: root.accentColor
-                    opacity: 0.34
-                    
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: Material3Anim.short2
-                            easing.bezierCurve: Material3Anim.standard
-                        }
-                    }
-                }
+                x: slider.leftPadding; y: slider.topPadding + slider.availableHeight / 2 - height / 2
+                implicitWidth: 200; implicitHeight: 8
+                width: slider.availableWidth; height: implicitHeight
+                radius: 4
+                color: Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.1)
 
                 Rectangle {
-                    width: 10
-                    height: 10
-                    radius: 5
-                    x: Math.max(0, Math.min(parent.width - width, slider.visualPosition * parent.width - width / 2))
-                    y: (parent.height - height) / 2
-                    color: root.accentColor
-                    border.width: 2
-                    border.color: root.surfaceColor
+                    width: slider.visualPosition * parent.width; height: parent.height; radius: 4
+                    color: root.isMuted ? Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.3) : root.cPrimary
+                    Behavior on color { ColorAnimation { duration: 150 } }
                 }
             }
-            
+
+            // M3 Expressive Morphing Handle
             handle: Rectangle {
-                visible: false
+                x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
+                y: slider.topPadding + slider.availableHeight / 2 - height / 2
+                property real targetHeight: slider.pressed ? 32 : 20
+                width: 20
+                height: targetHeight
+                radius: width / 2
+                color: root.cPrimary
+
+                Behavior on height { NumberAnimation { duration: 200; easing.bezierCurve: Material3Anim.emphasized } }
             }
         }
-        
-        // Percentage Text
+
         Text {
-            Layout.rightMargin: 16
             Layout.preferredWidth: 44
             text: root.currentVolume + "%"
-            font.family: "Inter"
-            font.pixelSize: 13
-            font.weight: Font.DemiBold
-            color: root.textColor
-            horizontalAlignment: Text.AlignRight
+            font.family: "Inter"; font.pixelSize: 15; font.weight: Font.Bold
+            color: root.cOnSurface; horizontalAlignment: Text.AlignRight
         }
     }
 }

@@ -1,141 +1,85 @@
 import QtQuick 6.10
 import QtQuick.Layouts 6.10
 import QtQuick.Controls 6.10
-import Quickshell
 import "../../../components/effects"
 
-Rectangle {
+Item {
     id: root
-    
+
     required property var brightness
     property var pywal
-    
-    // Current brightness value
+
     readonly property int currentBrightness: brightness ? Math.round((brightness.percentage ?? 0)) : 0
-    
-    // Solid color tokens
-    readonly property color surfaceColor: pywal ? pywal.surfaceContainerHighest : "#1a1a1a"
-    readonly property color textColor: pywal ? pywal.foreground : "#dddddd"
-    readonly property color accentColor: pywal ? pywal.warning : "#cc9966"  // Warm color for brightness
-    
+
+    readonly property color cSurface: pywal ? pywal.surfaceContainer : "#1a1a1a"
+    readonly property color cOnSurface: pywal ? pywal.foreground : "#dddddd"
+    readonly property color cPrimary: pywal ? pywal.warning : "#cc9966"
+
     Layout.fillWidth: true
-    Layout.preferredHeight: 54
-    
-    radius: 22
-    color: surfaceColor
-    border.width: 1
-    border.color: pywal ? pywal.outlineVariant : Qt.rgba(1, 1, 1, 0.12)
-    
-    Behavior on color {
-        ColorAnimation {
-            duration: Material3Anim.medium2
-            easing.bezierCurve: Material3Anim.standard
-        }
-    }
+    Layout.preferredHeight: 64
 
     RowLayout {
         anchors.fill: parent
-        spacing: 0
-        
-        // Icon
+        anchors.leftMargin: 20
+        anchors.rightMargin: 24
+        spacing: 16
+
+        // M3 Icon Button
         Rectangle {
-            id: iconBtn
-            Layout.preferredWidth: 52
-            Layout.fillHeight: true
-            radius: 20
-            color: iconMouse.containsMouse 
-                ? Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.1) 
-                : "transparent"
-            
-            Behavior on color {
-                ColorAnimation {
-                    duration: Material3Anim.short3
-                    easing.bezierCurve: Material3Anim.standard
-                }
-            }
-            
+            Layout.preferredWidth: 44; Layout.preferredHeight: 44; radius: 22
+            color: iconMouse.pressed ? Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.12) : iconMouse.containsMouse ? Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.08) : "transparent"
+            Behavior on color { ColorAnimation { duration: 150 } }
+            scale: iconMouse.pressed ? 0.92 : 1.0
+            Behavior on scale { NumberAnimation { duration: 100; easing.bezierCurve: Material3Anim.springGentle } }
+
             Text {
                 anchors.centerIn: parent
                 text: root.currentBrightness > 70 ? "󰃠" : (root.currentBrightness > 30 ? "󰃟" : "󰃞")
-                font.family: "Material Design Icons"
-                font.pixelSize: 20
-                color: root.accentColor
+                font.family: "Material Design Icons"; font.pixelSize: 24
+                color: root.cPrimary
             }
-            
-            MouseArea {
-                id: iconMouse
-                anchors.fill: parent
-                hoverEnabled: true
-            }
+            MouseArea { id: iconMouse; anchors.fill: parent; hoverEnabled: true }
         }
-        
-        // Slider
+
         Slider {
             id: slider
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.rightMargin: 12
-            
-            from: 0
-            to: 100
-            value: root.currentBrightness
-            live: false
-            
+            Layout.fillWidth: true; Layout.fillHeight: true
+            from: 0; to: 100; value: root.currentBrightness; live: true
             onMoved: root.brightness.setBrightness(value / 100)
-            
+
             background: Rectangle {
-                x: slider.leftPadding
-                y: slider.topPadding + slider.availableHeight / 2 - height / 2
-                implicitWidth: 200
-                implicitHeight: 30
-                width: slider.availableWidth
-                height: implicitHeight
-                radius: 15
-                color: Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.08)
-                
-                // Progress fill
-                Rectangle {
-                    width: slider.visualPosition * parent.width
-                    height: parent.height
-                    radius: 15
-                    color: root.accentColor
-                    opacity: 0.34
-                    
-                    Behavior on width {
-                        NumberAnimation {
-                            duration: Material3Anim.short2
-                            easing.bezierCurve: Material3Anim.standard
-                        }
-                    }
-                }
+                x: slider.leftPadding; y: slider.topPadding + slider.availableHeight / 2 - height / 2
+                implicitWidth: 200; implicitHeight: 8
+                width: slider.availableWidth; height: implicitHeight
+                radius: 4
+                color: Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.1)
 
                 Rectangle {
-                    width: 10
-                    height: 10
-                    radius: 5
-                    x: Math.max(0, Math.min(parent.width - width, slider.visualPosition * parent.width - width / 2))
-                    y: (parent.height - height) / 2
-                    color: root.accentColor
-                    border.width: 2
-                    border.color: root.surfaceColor
+                    width: slider.visualPosition * parent.width; height: parent.height; radius: 4
+                    color: root.cPrimary
+                    Behavior on color { ColorAnimation { duration: 150 } }
                 }
             }
-            
+
+            // M3 Expressive Morphing Handle
             handle: Rectangle {
-                visible: false
+                x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
+                y: slider.topPadding + slider.availableHeight / 2 - height / 2
+                property real targetHeight: slider.pressed ? 32 : 20
+                width: 20
+                height: targetHeight
+                radius: width / 2
+                color: root.cPrimary
+
+                Behavior on height { NumberAnimation { duration: 200; easing.bezierCurve: Material3Anim.emphasized } }
             }
         }
-        
-        // Percentage Text
+
         Text {
-            Layout.rightMargin: 16
             Layout.preferredWidth: 44
             text: root.currentBrightness + "%"
-            font.family: "Inter"
-            font.pixelSize: 13
-            font.weight: Font.DemiBold
-            color: root.textColor
-            horizontalAlignment: Text.AlignRight
+            font.family: "Inter"; font.pixelSize: 15; font.weight: Font.Bold
+            color: root.cOnSurface; horizontalAlignment: Text.AlignRight
         }
     }
 }
