@@ -16,6 +16,16 @@ Singleton {
     
     readonly property string configPath: `${Quickshell.env("HOME")}/.config/quickshell/settings.json`
     
+    property bool _loading: true
+    property string _pendingJson: ""
+    
+    Timer {
+        id: saveTimer
+        interval: 500
+        repeat: false
+        onTriggered: doSaveSettings()
+    }
+    
     Component.onCompleted: {
         loadSettings()
     }
@@ -38,11 +48,17 @@ Singleton {
                 } catch(e) {
                     QsServices.Logger.warn("Settings", `Failed to load: ${e?.message ?? e}`)
                 }
+                root._loading = false
             }
         }
     }
     
     function saveSettings() {
+        if (_loading) return
+        saveTimer.restart()
+    }
+    
+    function doSaveSettings() {
         const settings = {
             dndEnabled: root.dndEnabled,
             caffeineEnabled: root.caffeineEnabled,
@@ -51,11 +67,18 @@ Singleton {
         }
         
         const json = JSON.stringify(settings, null, 2)
-        saveProc.exec(["sh", "-c", `mkdir -p ~/.config/quickshell && echo '${json}' > ${root.configPath}`])
+        const parts = root.configPath.split("/")
+        const dir = parts.slice(0, -1).join("/")
+        const tmpPath = root.configPath + ".tmp"
+        
+        writeProc.exec(["sh", "-c",
+            "mkdir -p \"$1\" && printf '%s' \"$2\" > \"$3\" && mv \"$3\" \"$4\"",
+            "sh", dir, json, tmpPath, root.configPath
+        ])
     }
     
     Process {
-        id: saveProc
+        id: writeProc
     }
     
     onDndEnabledChanged: saveSettings()
