@@ -18,7 +18,7 @@ Singleton {
     readonly property int sourcePercentage: Math.round(sourceVolume * 100)
 
     Timer {
-        interval: 250
+        interval: 1000
         running: true
         repeat: true
         onTriggered: {
