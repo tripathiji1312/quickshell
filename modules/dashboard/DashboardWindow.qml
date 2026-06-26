@@ -478,6 +478,20 @@ PanelWindow {
                                         : "powerprofilesctl not available"
                                     accent: pywal.secondary
                                 }
+                                InsightCard {
+                                    title: "Top processes"
+                                    body: {
+                                        var tops = root.systemUsage.topProcesses
+                                        if (tops.length === 0) return "Collecting..."
+                                        var lines = []
+                                        for (var i = 0; i < Math.min(tops.length, 3); i++) {
+                                            var p = tops[i]
+                                            lines.push(p.name.substring(0, 20) + " " + Math.round(p.cpu) + "%")
+                                        }
+                                        return lines.join(" · ")
+                                    }
+                                    accent: pywal.warning
+                                }
                             }
                         }
                     }
