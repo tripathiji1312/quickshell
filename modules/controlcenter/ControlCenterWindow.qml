@@ -28,6 +28,7 @@ PanelWindow {
     readonly property var screenshot: QsServices.Screenshot
     readonly property var idleInhibitor: QsServices.IdleInhibitor
     readonly property var gamingMode: QsServices.GamingMode
+    readonly property var settings: QsServices.Settings
     
     // Process launchers for header buttons
     Process {
@@ -349,6 +350,26 @@ PanelWindow {
                                 surfaceColor: root.cSurfaceContainerHigh
                                 textColor: root.cOnSurface
                                 onClicked: root.gamingMode.toggle()
+                            }
+
+                            QuickToggle {
+                                Layout.fillWidth: true
+                                icon: "󰄉"
+                                label: "Focus Mode"
+                                subLabel: root.settings.focusModeEnabled
+                                    ? `${root.settings.focusModeMinutesLeft} min remaining`
+                                    : "25 min timer"
+                                active: root.settings.focusModeEnabled
+                                activeColor: pywal.info
+                                surfaceColor: root.cSurfaceContainerHigh
+                                textColor: root.cOnSurface
+                                onClicked: {
+                                    root.settings.focusModeEnabled = !root.settings.focusModeEnabled
+                                    if (root.settings.focusModeEnabled) {
+                                        root.settings.focusModeMinutesLeft = 25
+                                        root.notifs.dnd = true
+                                    }
+                                }
                             }
 
                             QuickToggle {

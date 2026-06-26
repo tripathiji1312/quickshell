@@ -58,6 +58,29 @@ ShellRoot {
 
     BatteryMonitor {}
 
+    Timer {
+        interval: 60000
+        running: QsServices.Settings.focusModeEnabled
+        repeat: true
+        onTriggered: {
+            if (QsServices.Settings.focusModeMinutesLeft > 0) {
+                QsServices.Settings.focusModeMinutesLeft--
+            }
+            if (QsServices.Settings.focusModeMinutesLeft <= 0) {
+                QsServices.Settings.focusModeEnabled = false
+            }
+        }
+    }
+
+    Connections {
+        target: notifs
+        function onDndChanged() {
+            if (!notifs.dnd && QsServices.Settings.focusModeEnabled) {
+                QsServices.Settings.focusModeEnabled = false
+            }
+        }
+    }
+
     Component.onCompleted: {
         QsServices.Logger.info("Shell", "Loaded")
     }
