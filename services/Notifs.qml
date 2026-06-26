@@ -98,7 +98,12 @@ Singleton {
         }
         
         // Cap maximum notifications to prevent memory leaks
-        root.notifications = [notifWrapper, ...root.notifications].slice(0, root.maxNotifications)
+        var capped = [notifWrapper, ...root.notifications]
+        var dropped = capped.slice(root.maxNotifications)
+        for (var i = 0; i < dropped.length; i++) {
+            if (dropped[i]) dropped[i].destroy()
+        }
+        root.notifications = capped.slice(0, root.maxNotifications)
         QsServices.Logger.debug("Notifs", `Total notifications: ${root.notifications.length}`)
         QsServices.Logger.debug("Notifs", `Queued: ${notifWrapper.appName ?? ""} ${notifWrapper.summary ?? ""}`)
     }
