@@ -1,6 +1,7 @@
 pragma Singleton
 
 import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Mpris
 import QtQuick 6.10
 
@@ -47,6 +48,46 @@ Singleton {
         repeat: true
         triggeredOnStart: true
         onTriggered: root.updateActivePlayer()
+    }
+
+    // Playerctl-based control methods (MPRIS D-Bus methods from QuickShell are unreliable)
+    function togglePlaying(playerName = "") {
+        if (playerName)
+            ctrlProc.exec(["playerctl", "--player", playerName, "play-pause"])
+        else
+            ctrlProc.exec(["playerctl", "play-pause"])
+    }
+
+    function next(playerName = "") {
+        if (playerName)
+            ctrlProc.exec(["playerctl", "--player", playerName, "next"])
+        else
+            ctrlProc.exec(["playerctl", "next"])
+    }
+
+    function previous(playerName = "") {
+        if (playerName)
+            ctrlProc.exec(["playerctl", "--player", playerName, "previous"])
+        else
+            ctrlProc.exec(["playerctl", "previous"])
+    }
+
+    function stop(playerName = "") {
+        if (playerName)
+            ctrlProc.exec(["playerctl", "--player", playerName, "stop"])
+        else
+            ctrlProc.exec(["playerctl", "stop"])
+    }
+
+    Process {
+        id: ctrlProc
+    }
+
+    function setPosition(microseconds, playerName = "") {
+        var args = ["playerctl", "position", String(Math.floor(microseconds))]
+        if (playerName)
+            args = ["playerctl", "--player", playerName, "position", String(Math.floor(microseconds))]
+        ctrlProc.exec(args)
     }
 
     function getIdentity(player: var): string {

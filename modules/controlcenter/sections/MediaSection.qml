@@ -380,9 +380,7 @@ Item {
                         value: selectedPlayer?.position ?? 0
                         
                         onMoved: {
-                            if (selectedPlayer) {
-                                selectedPlayer.setPosition(value)
-                            }
+                            players.setPosition(value, selectedPlayer?.desktopEntry ?? "")
                         }
                         
                         background: Rectangle {
@@ -488,9 +486,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             
                             onClicked: {
-                                if (selectedPlayer) {
-                                    selectedPlayer.previous()
-                                }
+                                players.previous(selectedPlayer?.desktopEntry ?? "")
                             }
                         }
                     }
@@ -545,9 +541,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             
                             onClicked: {
-                                if (selectedPlayer) {
-                                    selectedPlayer.togglePlaying()
-                                }
+                                players.togglePlaying(selectedPlayer?.desktopEntry ?? "")
                             }
                         }
                     }
@@ -586,9 +580,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             
                             onClicked: {
-                                if (selectedPlayer) {
-                                    selectedPlayer.next()
-                                }
+                                players.next(selectedPlayer?.desktopEntry ?? "")
                             }
                         }
                     }

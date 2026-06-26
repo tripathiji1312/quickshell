@@ -1,6 +1,7 @@
 import QtQuick 6.10
 import QtQuick.Layouts 6.10
 import Quickshell
+import Quickshell.Io
 import qs.services
 import "../../../components"
 import "../../../components/effects"
@@ -21,15 +22,51 @@ Item {
     readonly property var player: Players.active
     readonly property bool hasPlayer: player !== null
     readonly property bool isPlaying: player?.isPlaying ?? false
-    readonly property real progress: player?.position ?? 0
-    readonly property real duration: player?.length ?? 1
-    readonly property real progressPercent: duration > 0 ? progress / duration : 0
+    property real progress: 0
+    property real duration: player?.length ?? 1
+    property real progressPercent: duration > 0 ? progress / duration : 0
     
     property bool isHovered: contentMouse.containsMouse || noMediaMouse.containsMouse
     
-    // Reset text position when paused
+    // Poll position via playerctl for live progress updates
+    Timer {
+        interval: 1000
+        running: hasPlayer && isPlaying
+        repeat: true
+        onTriggered: posPollProc.running = true
+    }
+    
+    Process {
+        id: posPollProc
+        command: ["playerctl", "position"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var val = parseFloat(text.trim())
+                if (!isNaN(val) && val >= 0)
+                    root.progress = val * 1000000  // playerctl returns seconds, convert to microseconds
+            }
+        }
+    }
+    
+    Process {
+        id: lenPollProc
+        command: ["playerctl", "metadata", "mpris:length"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var val = parseFloat(text.trim())
+                if (!isNaN(val) && val > 0)
+                    root.duration = val  // mpris:length is in microseconds
+            }
+        }
+    }
+    
+    onPlayerChanged: lenPollProc.running = true
+    
     onIsPlayingChanged: {
-        if (!isPlaying) {
+        if (isPlaying) {
+            posPollProc.running = true
+            lenPollProc.running = true
+        } else {
             marqueeAnim.stop()
             titleText.x = titleText.needsScroll ? 0 : (80 - titleText.implicitWidth) / 2
         }
@@ -259,9 +296,7 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     
                     onClicked: {
-                        if (root.player && root.player.canGoPrevious) {
-                            root.player.previous()
-                        }
+                        Players.previous()
                     }
                 }
             }
@@ -306,9 +341,7 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     
                     onClicked: {
-                        if (root.player && root.player.canTogglePlaying) {
-                            root.player.togglePlaying()
-                        }
+                        Players.togglePlaying()
                     }
                 }
             }
@@ -341,9 +374,7 @@ Item {
                     cursorShape: Qt.PointingHandCursor
                     
                     onClicked: {
-                        if (root.player && root.player.canGoNext) {
-                            root.player.next()
-                        }
+                        Players.next()
                     }
                 }
             }

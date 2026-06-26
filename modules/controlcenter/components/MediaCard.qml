@@ -251,7 +251,7 @@ Rectangle {
             ControlButton {
                 icon: "󰒮"
                 onClicked: {
-                    if (root.activePlayer) root.activePlayer.previous()
+                    root.mpris.previous()
                 }
             }
             
@@ -295,7 +295,7 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     hoverEnabled: true
                     onClicked: {
-                        if (root.activePlayer) root.activePlayer.togglePlaying()
+                        root.mpris.togglePlaying()
                     }
                 }
             }
@@ -304,7 +304,7 @@ Rectangle {
             ControlButton {
                 icon: "󰒭"
                 onClicked: {
-                    if (root.activePlayer) root.activePlayer.next()
+                    root.mpris.next()
                 }
             }
         }
