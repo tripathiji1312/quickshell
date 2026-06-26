@@ -35,7 +35,7 @@ Singleton {
 
     // Refresh timer to ensure updates when events are missed
     Timer {
-        interval: 500
+        interval: 5000
         running: true
         repeat: true
         onTriggered: {
