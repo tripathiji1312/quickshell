@@ -57,17 +57,22 @@ Singleton {
         onExited: code => {
             const geometry = root._slurpGeometry
             root._slurpGeometry = ""
-            if (code === 0 && geometry !== "") {
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-                const filename = `screenshot-${timestamp}.png`
-                const filepath = `${root.screenshotsDir}/${filename}`
 
-                QsServices.Logger.debug("Screenshot", `Capturing region: ${geometry}`)
-                screenshotProc.exec(["grim", "-g", geometry, filepath])
-                root.lastScreenshotPath = filepath
-            } else if (code !== 0) {
+            if (code !== 0) {
                 QsServices.Logger.error("Screenshot", `slurp failed with code: ${code}`)
+                return
             }
+            if (geometry === "") {
+                return
+            }
+
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+            const filename = `screenshot-${timestamp}.png`
+            const filepath = `${root.screenshotsDir}/${filename}`
+
+            QsServices.Logger.debug("Screenshot", `Capturing region: ${geometry}`)
+            screenshotProc.exec(["grim", "-g", geometry, filepath])
+            root.lastScreenshotPath = filepath
         }
     }
     
@@ -80,20 +85,29 @@ Singleton {
         onExited: code => {
             const out = root._windowGeomText
             root._windowGeomText = ""
-            if (code === 0 && out !== "") {
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
-                const filename = `screenshot-${timestamp}.png`
-                const filepath = `${root.screenshotsDir}/${filename}`
-                const parts = out.split(' ')
-                if (parts.length === 4) {
-                    const geometry = `${parts[0]},${parts[1]} ${parts[2]}x${parts[3]}`
-                    QsServices.Logger.debug("Screenshot", `Capturing window: ${geometry}`)
-                    screenshotProc.exec(["grim", "-g", geometry, filepath])
-                    root.lastScreenshotPath = filepath
-                }
-            } else if (code !== 0) {
+
+            if (code !== 0) {
                 QsServices.Logger.error("Screenshot", `window geometry failed with code: ${code}`)
+                return
             }
+            if (out === "") {
+                return
+            }
+
+            const parts = out.split(' ')
+            if (parts.length !== 4) {
+                QsServices.Logger.warn("Screenshot", `Unexpected window geometry format: ${out}`)
+                return
+            }
+
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+            const filename = `screenshot-${timestamp}.png`
+            const filepath = `${root.screenshotsDir}/${filename}`
+            const geometry = `${parts[0]},${parts[1]} ${parts[2]}x${parts[3]}`
+
+            QsServices.Logger.debug("Screenshot", `Capturing window: ${geometry}`)
+            screenshotProc.exec(["grim", "-g", geometry, filepath])
+            root.lastScreenshotPath = filepath
         }
     }
     

@@ -45,10 +45,8 @@ Singleton {
     Component.onCompleted: {
         detectGpu()
         updateTimer.start()
-        updateCpu()
-        updateMemory()
+        updateSysStats()
         updateDisk()
-        updateNetwork()
         updateTopProcesses()
     }
     
@@ -56,20 +54,13 @@ Singleton {
         gpuDetectProc.running = true
     }
     
-    function updateCpu() {
-        cpuProcess.running = true
-    }
-    
-    function updateMemory() {
-        memProcess.running = true
+    function updateSysStats() {
+        if (!sysStatsProcess.running)
+            sysStatsProcess.running = true
     }
     
     function updateDisk() {
         diskProcess.running = true
-    }
-    
-    function updateNetwork() {
-        networkProcess.running = true
     }
     
     function updateGpu() {
@@ -97,54 +88,80 @@ Singleton {
         return { value: kb, unit: "KB" }
     }
     
-    // CPU usage calculation
+    // Combined CPU, memory, and network read (shared /proc sources)
     Process {
-        id: cpuProcess
-        command: ["/bin/sh", "-c", "cat /proc/stat | grep '^cpu '"]
+        id: sysStatsProcess
+        command: ["/bin/sh", "-c", "cat /proc/stat | grep '^cpu ' && echo '---MEM---' && free -b | grep Mem && echo '---NET---' && cat /proc/net/dev | tail -n +3 | awk '{rx+=$2; tx+=$10} END {print rx\" \"tx}'"]
         running: false
-        
-        stdout: SplitParser {
-            onRead: data => {
-                const parts = data.trim().split(/\s+/)
-                if (parts.length >= 5) {
-                    const user = parseInt(parts[1])
-                    const nice = parseInt(parts[2])
-                    const system = parseInt(parts[3])
-                    const idle = parseInt(parts[4])
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const sections = text.split('---MEM---\n')
+                if (sections.length < 2) return
+
+                // --- Parse CPU (first section) ---
+                const cpuData = sections[0].trim()
+                const cpuParts = cpuData.split(/\s+/)
+                if (cpuParts.length >= 5) {
+                    const user = parseInt(cpuParts[1])
+                    const nice = parseInt(cpuParts[2])
+                    const system = parseInt(cpuParts[3])
+                    const idle = parseInt(cpuParts[4])
                     const total = user + nice + system + idle
-                    
-                    if (lastCpuTotal > 0) {
-                        const totalDiff = total - lastCpuTotal
-                        const idleDiff = idle - lastCpuIdle
+
+                    if (root.lastCpuTotal > 0) {
+                        const totalDiff = total - root.lastCpuTotal
+                        const idleDiff = idle - root.lastCpuIdle
                         if (totalDiff > 0) {
-                            cpuPerc = 1 - (idleDiff / totalDiff)
+                            root.cpuPerc = 1 - (idleDiff / totalDiff)
                         }
                     }
-                    
-                    lastCpuIdle = idle
-                    lastCpuTotal = total
+
+                    root.lastCpuIdle = idle
+                    root.lastCpuTotal = total
+                }
+
+                // --- Parse memory (between ---MEM--- and ---NET---) ---
+                const memAndNet = sections[1].split('---NET---\n')
+                const memData = memAndNet[0].trim()
+                const memParts = memData.split(/\s+/)
+                if (memParts.length >= 3) {
+                    root.memTotal = parseInt(memParts[1])
+                    root.memUsed = parseInt(memParts[2])
+                }
+
+                // --- Parse network (after ---NET---) ---
+                if (memAndNet.length >= 2) {
+                    const netData = memAndNet[1].trim()
+                    const netParts = netData.split(/\s+/)
+                    if (netParts.length >= 2) {
+                        const rxBytes = parseInt(netParts[0])
+                        const txBytes = parseInt(netParts[1])
+                        const currentTime = Date.now() / 1000
+
+                        if (root.lastNetTime > 0) {
+                            const timeDiff = currentTime - root.lastNetTime
+                            if (timeDiff > 0) {
+                                root.downloadSpeed = (rxBytes - root.lastRxBytes) / timeDiff
+                                root.uploadSpeed = (txBytes - root.lastTxBytes) / timeDiff
+
+                                root.networkHistory.push({download: root.downloadSpeed, upload: root.uploadSpeed})
+                                if (root.networkHistory.length > 30) {
+                                    root.networkHistory.shift()
+                                }
+                                root.networkHistoryChanged()
+                            }
+                        }
+
+                        root.lastRxBytes = rxBytes
+                        root.lastTxBytes = txBytes
+                        root.lastNetTime = currentTime
+                    }
                 }
             }
         }
     }
-    
-    // Memory usage
-    Process {
-        id: memProcess
-        command: ["/bin/sh", "-c", "free -b | grep Mem"]
-        running: false
-        
-        stdout: SplitParser {
-            onRead: data => {
-                const parts = data.trim().split(/\s+/)
-                if (parts.length >= 3) {
-                    memTotal = parseInt(parts[1])
-                    memUsed = parseInt(parts[2])
-                }
-            }
-        }
-    }
-    
+
     // Disk usage
     Process {
         id: diskProcess
@@ -157,43 +174,6 @@ Singleton {
                 if (parts.length >= 3) {
                     diskTotal = parseInt(parts[1])
                     diskUsed = parseInt(parts[2])
-                }
-            }
-        }
-    }
-    
-    // Network speed monitoring (all interfaces combined)
-    Process {
-        id: networkProcess
-        command: ["/bin/sh", "-c", "cat /proc/net/dev | tail -n +3 | awk '{rx+=$2; tx+=$10} END {print rx\" \"tx}'"]
-        running: false
-        
-        stdout: SplitParser {
-            onRead: data => {
-                const parts = data.trim().split(/\s+/)
-                if (parts.length >= 2) {
-                    const rxBytes = parseInt(parts[0])
-                    const txBytes = parseInt(parts[1])
-                    const currentTime = Date.now() / 1000  // seconds
-                    
-                    if (lastNetTime > 0) {
-                        const timeDiff = currentTime - lastNetTime
-                        if (timeDiff > 0) {
-                            downloadSpeed = (rxBytes - lastRxBytes) / timeDiff
-                            uploadSpeed = (txBytes - lastTxBytes) / timeDiff
-                            
-                            // Add to history (keep last 30 points = 60 seconds)
-                            networkHistory.push({download: downloadSpeed, upload: uploadSpeed})
-                            if (networkHistory.length > 30) {
-                                networkHistory.shift()
-                            }
-                            networkHistoryChanged()
-                        }
-                    }
-                    
-                    lastRxBytes = rxBytes
-                    lastTxBytes = txBytes
-                    lastNetTime = currentTime
                 }
             }
         }
@@ -315,9 +295,7 @@ Singleton {
             tickCount++
             
             // Update CPU, Memory, Network every tick (2s)
-            updateCpu()
-            updateMemory()
-            updateNetwork()
+            updateSysStats()
             
             // Update Disk less frequently (every 10s)
             if (tickCount % 5 === 0) {

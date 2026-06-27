@@ -7,18 +7,19 @@ Scope {
     id: root
 
     property list<var> warnLevels: [
-        { level: 20, title: "Battery low", message: "Plug in soon", icon: "battery_alert", warned: false },
-        { level: 10, title: "Battery very low", message: "Save your work", icon: "battery_alert", warned: false },
-        { level: 5, title: "Battery critical", message: "Plug in now", icon: "battery_alert", warned: false }
+        { level: 20, title: "Battery low", message: "Plug in soon", icon: "battery_alert" },
+        { level: 10, title: "Battery very low", message: "Save your work", icon: "battery_alert" },
+        { level: 5, title: "Battery critical", message: "Plug in now", icon: "battery_alert" }
     ]
+
+    property var _warnedLevels: ({})
 
     property int criticalLevel: 2
     property int criticalActionDelayMs: 5000
     property string criticalAction: "hibernate" // hibernate|poweroff|none
 
     function _resetWarned(): void {
-        for (let i = 0; i < warnLevels.length; i++)
-            warnLevels[i].warned = false
+        _warnedLevels = ({})
     }
 
     function _notify(title: string, body: string): void {
@@ -52,8 +53,8 @@ Scope {
             const sorted = [...warnLevels].sort((a, b) => b.level - a.level)
             for (let i = 0; i < sorted.length; i++) {
                 const lvl = sorted[i]
-                if (p <= lvl.level && !lvl.warned) {
-                    lvl.warned = true
+                if (p <= lvl.level && !_warnedLevels[lvl.level]) {
+                    _warnedLevels[lvl.level] = true
                     root._notify(lvl.title, `${lvl.message} (${p}%)`)
                 }
             }

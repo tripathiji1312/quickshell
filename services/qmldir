@@ -14,5 +14,4 @@ singleton Settings Settings.qml
 singleton PowerProfiles PowerProfiles.qml
 singleton Screenshot Screenshot.qml
 singleton Logger Logger.qml
-singleton UIState UIState.qml
 singleton Bluetooth Bluetooth.qml

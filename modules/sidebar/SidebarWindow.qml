@@ -227,7 +227,7 @@ PanelWindow {
                         property bool expanded: false
 
                         width: listView.width
-                        height: content.implicitHeight + 22
+                        height: cardContent.implicitHeight + 52
                         radius: 20
                         color: cardMouse.containsMouse ? root.cSurfaceContainerHigh : root.cSurfaceContainer
                         border.width: modelData.read ? 1 : 1.25
@@ -249,197 +249,87 @@ PanelWindow {
                             }
                         }
 
-                        ColumnLayout {
-                            id: content
-                            anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 10
+                        NotificationCard {
+                            id: cardContent
+                            anchors {
+                                left: parent.left; right: parent.right; top: parent.top
+                                leftMargin: 12; rightMargin: 12; topMargin: 12
+                            }
+                            notification: card.modelData
+                            pywal: root.pywal
+                            showCloseButton: false
+                            showTimestamp: true
+                            showUnreadDot: true
+                            showActions: true
+                            showBody: card.expanded
+                            showAppIcon: true
 
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 10
+                            primaryColor: root.cPrimary
+                            onSurfaceColor: root.cText
+                            onSurfaceVariantColor: root.cSubText
+                            errorColor: pywal.error
+                            surfaceContainerHighColor: root.cSurfaceContainerHigh
+                        }
 
-                                Rectangle {
-                                    Layout.preferredWidth: 40
-                                    Layout.preferredHeight: 40
-                                    radius: 14
-                                    color: Qt.rgba(root.urgencyColor(card.modelData).r, root.urgencyColor(card.modelData).g, root.urgencyColor(card.modelData).b, 0.12)
+                        RowLayout {
+                            anchors {
+                                left: parent.left; right: parent.right; bottom: parent.bottom
+                                leftMargin: 12; rightMargin: 12; bottomMargin: 12
+                            }
+                            spacing: 8
 
-                                    Image {
-                                        anchors.centerIn: parent
-                                        width: 22
-                                        height: 22
-                                        source: root.iconSourceFor(card.modelData)
-                                        visible: status === Image.Ready
-                                    }
+                            Item { Layout.fillWidth: true }
 
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: !parent.children[0].visible
-                                        text: (card.modelData.appName ?? "N").slice(0, 1).toUpperCase()
-                                        font.family: QsConfig.Config.appearance.fontFamily
-                                        font.pixelSize: 16
-                                        font.weight: Font.Bold
-                                        color: root.urgencyColor(card.modelData)
-                                    }
+                            Rectangle {
+                                Layout.preferredWidth: 78
+                                Layout.preferredHeight: 28
+                                radius: 14
+                                color: closeMouse.containsMouse
+                                    ? Qt.rgba(root.cText.r, root.cText.g, root.cText.b, 0.12)
+                                    : Qt.rgba(root.cText.r, root.cText.g, root.cText.b, 0.06)
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: card.modelData.closed ? "Dismissed" : "Dismiss"
+                                    font.family: QsConfig.Config.appearance.fontFamily
+                                    font.pixelSize: 10
+                                    color: root.cText
                                 }
 
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 2
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: card.modelData.summary || "Notification"
-                                        font.family: QsConfig.Config.appearance.fontFamily
-                                        font.pixelSize: 13
-                                        font.weight: Font.DemiBold
-                                        color: root.cText
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Text {
-                                        Layout.fillWidth: true
-                                        text: card.modelData.appName || "Unknown app"
-                                        font.family: QsConfig.Config.appearance.fontFamily
-                                        font.pixelSize: 11
-                                        color: root.cSubText
-                                        elide: Text.ElideRight
-                                    }
-                                }
-
-                                ColumnLayout {
-                                    spacing: 4
-
-                                    Rectangle {
-                                        Layout.alignment: Qt.AlignRight
-                                        width: 8
-                                        height: 8
-                                        radius: 4
-                                        visible: !card.modelData.read
-                                        color: root.cPrimary
-                                    }
-
-                                    Text {
-                                        Layout.alignment: Qt.AlignRight
-                                        text: card.modelData.timeString
-                                        font.family: QsConfig.Config.appearance.fontFamily
-                                        font.pixelSize: 10
-                                        color: root.cSubText
+                                MouseArea {
+                                    id: closeMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        card.modelData.read = true
+                                        card.modelData.close()
                                     }
                                 }
                             }
 
-                            Text {
-                                Layout.fillWidth: true
-                                text: card.modelData.body || ""
-                                visible: text.length > 0
-                                wrapMode: Text.WordWrap
-                                maximumLineCount: card.expanded ? 8 : 2
-                                elide: Text.ElideRight
-                                font.family: QsConfig.Config.appearance.fontFamily
-                                font.pixelSize: 11
-                                color: root.cSubText
-                            }
+                            Rectangle {
+                                Layout.preferredWidth: 70
+                                Layout.preferredHeight: 28
+                                radius: 14
+                                color: deleteMouse.containsMouse
+                                    ? Qt.rgba(pywal.error.r, pywal.error.g, pywal.error.b, 0.16)
+                                    : Qt.rgba(pywal.error.r, pywal.error.g, pywal.error.b, 0.10)
 
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 8
-                                visible: card.expanded && ((card.modelData.actions?.length ?? 0) > 0)
-
-                                Repeater {
-                                    model: card.modelData.actions ?? []
-
-                                    Rectangle {
-                                        required property var modelData
-                                        Layout.preferredHeight: 30
-                                        Layout.preferredWidth: Math.min(140, label.implicitWidth + 18)
-                                        radius: 15
-                                        color: actionMouse.containsMouse
-                                            ? Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, 0.18)
-                                            : Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, 0.12)
-
-                                        Text {
-                                            id: label
-                                            anchors.centerIn: parent
-                                            text: modelData.text
-                                            font.family: QsConfig.Config.appearance.fontFamily
-                                            font.pixelSize: 11
-                                            font.weight: Font.Medium
-                                            color: root.cPrimary
-                                        }
-
-                                        MouseArea {
-                                            id: actionMouse
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                card.modelData.read = true
-                                                modelData.invoke()
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 8
-
-                                Item { Layout.fillWidth: true }
-
-                                Rectangle {
-                                    Layout.preferredWidth: 78
-                                    Layout.preferredHeight: 28
-                                    radius: 14
-                                    color: closeMouse.containsMouse
-                                        ? Qt.rgba(root.cText.r, root.cText.g, root.cText.b, 0.12)
-                                        : Qt.rgba(root.cText.r, root.cText.g, root.cText.b, 0.06)
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: card.modelData.closed ? "Dismissed" : "Dismiss"
-                                        font.family: QsConfig.Config.appearance.fontFamily
-                                        font.pixelSize: 10
-                                        color: root.cText
-                                    }
-
-                                    MouseArea {
-                                        id: closeMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: {
-                                            card.modelData.read = true
-                                            card.modelData.close()
-                                        }
-                                    }
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "Delete"
+                                    font.family: QsConfig.Config.appearance.fontFamily
+                                    font.pixelSize: 10
+                                    color: pywal.error
                                 }
 
-                                Rectangle {
-                                    Layout.preferredWidth: 70
-                                    Layout.preferredHeight: 28
-                                    radius: 14
-                                    color: deleteMouse.containsMouse
-                                        ? Qt.rgba(pywal.error.r, pywal.error.g, pywal.error.b, 0.16)
-                                        : Qt.rgba(pywal.error.r, pywal.error.g, pywal.error.b, 0.10)
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "Delete"
-                                        font.family: QsConfig.Config.appearance.fontFamily
-                                        font.pixelSize: 10
-                                        color: pywal.error
-                                    }
-
-                                    MouseArea {
-                                        id: deleteMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.notifs.deleteNotification(card.modelData)
-                                    }
+                                MouseArea {
+                                    id: deleteMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.notifs.deleteNotification(card.modelData)
                                 }
                             }
                         }

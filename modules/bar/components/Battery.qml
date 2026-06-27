@@ -59,8 +59,8 @@ Item {
         return Qt.rgba(pywal.foreground.r, pywal.foreground.g, pywal.foreground.b, 0.6)
     }
     
-    readonly property color chargingColor: "#8FDEB4"
-    readonly property color liquidColor: Qt.lighter("#8FDEB4", 1.2)
+    readonly property color chargingColor: pywal.success
+    readonly property color liquidColor: Qt.lighter(pywal.success, 1.2)
     readonly property color compactBatteryColor: {
         if (showExpandedMode || justPluggedIn) return chargingColor
         if (isPluggedIn && (isLow || isWarning)) return normalColor
@@ -298,7 +298,7 @@ Item {
                 font.family: "Inter"
                 font.pixelSize: 11
                 font.weight: Font.Bold
-                color: "#000000"
+                color: pywal.foreground
             }
         }
     }

@@ -1,7 +1,7 @@
 import QtQuick 6.10
 import QtQuick.Layouts 6.10
-import QtQuick.Controls 6.10
 import Quickshell
+import "../../../components"
 import "../../../components/effects"
 
 Item {
@@ -73,38 +73,35 @@ Item {
                     required property var modelData
 
                     width: notifListView.width
-                    height: notifContent.implicitHeight + 24
+                    height: cardContent.implicitHeight + 24
                     radius: 20
                     color: notifMouse.pressed ? Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.12) : notifMouse.containsMouse ? Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.08) : root.cSurfaceContainerHigh
                     Behavior on color { ColorAnimation { duration: 150 } }
 
-                    MouseArea { id: notifMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (notifDelegate.modelData.actions?.length > 0) notifDelegate.modelData.actions[0].invoke() }
+                    MouseArea {
+                        id: notifMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: if (notifDelegate.modelData.actions?.length > 0)
+                            notifDelegate.modelData.actions[0].invoke()
+                    }
 
-                    RowLayout {
-                        id: notifContent
+                    NotificationCard {
+                        id: cardContent
                         anchors.fill: parent
                         anchors.margins: 14
-                        spacing: 12
+                        notification: notifDelegate.modelData
+                        pywal: root.pywal
+                        showCloseButton: true
+                        showTimestamp: false
+                        showActions: false
+                        showBody: true
+                        showAppIcon: false
 
-                        Rectangle {
-                            Layout.preferredWidth: 40; Layout.preferredHeight: 40; Layout.alignment: Qt.AlignTop; radius: 20
-                            color: Qt.rgba(root.cPrimary.r, root.cPrimary.g, root.cPrimary.b, 0.15)
-                            Text { anchors.centerIn: parent; text: "󰂚"; font.family: "Material Design Icons"; font.pixelSize: 20; color: root.cPrimary }
-                        }
-
-                        ColumnLayout {
-                            Layout.fillWidth: true; spacing: 4
-                            Text { text: notifDelegate.modelData.summary ?? "Notification"; font.family: "Inter"; font.pixelSize: 14; font.weight: Font.DemiBold; color: root.cOnSurface; elide: Text.ElideRight; Layout.fillWidth: true }
-                            Text { text: notifDelegate.modelData.body ?? ""; font.family: "Inter"; font.pixelSize: 12; color: root.cOnSurfaceVariant; elide: Text.ElideRight; maximumLineCount: 2; wrapMode: Text.WordWrap; Layout.fillWidth: true; visible: text !== "" }
-                        }
-
-                        Rectangle {
-                            Layout.preferredWidth: 32; Layout.preferredHeight: 32; Layout.alignment: Qt.AlignTop; radius: 16
-                            color: closeMouse.pressed ? Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.12) : closeMouse.containsMouse ? Qt.rgba(root.cOnSurface.r, root.cOnSurface.g, root.cOnSurface.b, 0.08) : "transparent"
-                            Behavior on color { ColorAnimation { duration: 100 } }
-                            Text { anchors.centerIn: parent; text: "󰅖"; font.family: "Material Design Icons"; font.pixelSize: 18; color: closeMouse.containsMouse ? root.cOnSurface : root.cOnSurfaceVariant; Behavior on color { ColorAnimation { duration: 100 } } }
-                            MouseArea { id: closeMouse; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true; onClicked: notifDelegate.modelData.close() }
-                        }
+                        primaryColor: root.cPrimary
+                        onSurfaceColor: root.cOnSurface
+                        onSurfaceVariantColor: root.cOnSurfaceVariant
                     }
                 }
 

@@ -6,6 +6,7 @@ import Quickshell.Services.Notifications
 import Quickshell.Wayland
 import "../../../services" as QsServices
 import "../../../config" as QsConfig
+import "../../../components"
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Material 3 Expressive Notification Popups — Revamped
@@ -287,7 +288,7 @@ PanelWindow {
                     Rectangle {
                         id: cardBg
                         width: parent.width
-                        height: contentCol.implicitHeight + 34
+                        height: contentCard.implicitHeight + 34
                         radius: 18
                         color: root.m3Surface
 
@@ -526,11 +527,8 @@ PanelWindow {
                             }
                         }
 
-                        // ═══════════════════════════════════════════════════
-                        // CONTENT LAYOUT
-                        // ═══════════════════════════════════════════════════
-                        ColumnLayout {
-                            id: contentCol
+                        NotificationCard {
+                            id: contentCard
                             anchors {
                                 left: parent.left
                                 right: parent.right
@@ -538,299 +536,19 @@ PanelWindow {
                                 margins: 16
                                 topMargin: 18
                             }
-                            spacing: 6
+                            notification: modelData
+                            pywal: root.pywal
+                            showCloseButton: true
+                            showTimestamp: false
+                            showActions: true
+                            showBody: true
+                            showAppIcon: true
 
-                            // ── Header Row ──
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 10
-
-                                // App icon — rounded square with urgency tint
-                                Rectangle {
-                                    Layout.preferredWidth: 34
-                                    Layout.preferredHeight: 34
-                                    radius: 10
-                                    color: Qt.rgba(
-                                        root._urgencyColor(modelData.urgency).r,
-                                        root._urgencyColor(modelData.urgency).g,
-                                        root._urgencyColor(modelData.urgency).b, 0.12)
-
-                                    // App icon image
-                                    Image {
-                                        anchors.centerIn: parent
-                                        width: 18; height: 18
-                                        visible: modelData.appIcon && modelData.appIcon.length > 0
-                                        source: {
-                                            if (!modelData.appIcon) return ""
-                                            if (modelData.appIcon.startsWith("/") ||
-                                                modelData.appIcon.startsWith("file://"))
-                                                return modelData.appIcon
-                                            return "image://icon/" + modelData.appIcon
-                                        }
-                                        fillMode: Image.PreserveAspectFit
-                                        smooth: true; cache: true; asynchronous: true
-                                        onStatusChanged: {
-                                            if (status === Image.Error)
-                                                parent.visible = false
-                                        }
-                                    }
-
-                                    // Fallback icon
-                                    Text {
-                                        anchors.centerIn: parent
-                                        visible: !modelData.appIcon || modelData.appIcon.length === 0
-                                        text: "󰂞"
-                                        font.family: "Material Design Icons"
-                                        font.pixelSize: 16
-                                        color: root._urgencyColor(modelData.urgency)
-                                        opacity: 0.8
-                                    }
-                                }
-
-                                // App name + timestamp
-                                ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 1
-
-                                    Text {
-                                        text: modelData.appName || "Notification"
-                                        font.pixelSize: 11
-                                        font.weight: Font.Medium
-                                        font.family: "Inter"
-                                        font.letterSpacing: 0.4
-                                        color: root.m3OnSurfaceVariant
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Text {
-                                        text: modelData.timeString || "now"
-                                        font.pixelSize: 9
-                                        font.family: "Inter"
-                                        color: Qt.rgba(root.m3OnSurface.r,
-                                                       root.m3OnSurface.g,
-                                                       root.m3OnSurface.b, 0.3)
-                                    }
-                                }
-
-                                // Close button — reveals on hover with spring
-                                Rectangle {
-                                    Layout.preferredWidth: 26
-                                    Layout.preferredHeight: 26
-                                    radius: 13
-                                    opacity: notifCard.isHovered ? 1 : 0
-                                    scale: notifCard.isHovered ? 1.0 : 0.6
-                                    color: closeMA.pressed
-                                        ? Qt.rgba(root.m3Error.r, root.m3Error.g,
-                                                  root.m3Error.b, 0.18)
-                                        : closeMA.containsMouse
-                                        ? Qt.rgba(root.m3OnSurface.r, root.m3OnSurface.g,
-                                                  root.m3OnSurface.b, 0.08)
-                                        : "transparent"
-
-                                    Behavior on opacity {
-                                        NumberAnimation {
-                                            duration: 200; easing.type: Easing.OutCubic
-                                        }
-                                    }
-                                    Behavior on scale {
-                                        NumberAnimation {
-                                            duration: 250
-                                            easing.type: Easing.OutBack
-                                            easing.overshoot: 1.4
-                                        }
-                                    }
-                                    Behavior on color {
-                                        ColorAnimation { duration: 120 }
-                                    }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "󰅖"
-                                        font.family: "Material Design Icons"
-                                        font.pixelSize: 13
-                                        color: closeMA.containsMouse
-                                            ? root.m3Error
-                                            : Qt.rgba(root.m3OnSurface.r,
-                                                      root.m3OnSurface.g,
-                                                      root.m3OnSurface.b, 0.45)
-
-                                        Behavior on color {
-                                            ColorAnimation { duration: 120 }
-                                        }
-                                    }
-
-                                    MouseArea {
-                                        id: closeMA
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: mouse => {
-                                            mouse.accepted = true
-                                            notifCard.dismiss()
-                                        }
-                                    }
-                                }
-                            }
-
-                            // ── Summary (headline) ──
-                            Text {
-                                Layout.fillWidth: true
-                                Layout.topMargin: 4
-                                text: modelData.summary || ""
-                                font.pixelSize: 13
-                                font.weight: Font.DemiBold
-                                font.family: "Inter"
-                                font.letterSpacing: -0.15
-                                color: root.m3OnSurface
-                                wrapMode: Text.Wrap
-                                maximumLineCount: 2
-                                elide: Text.ElideRight
-                                lineHeight: 1.3
-                                visible: text.length > 0
-                            }
-
-                            // ── Body (secondary text, expandable) ──
-                            Text {
-                                Layout.fillWidth: true
-                                text: modelData.body || ""
-                                font.pixelSize: 12
-                                font.family: "Inter"
-                                font.letterSpacing: 0.1
-                                color: root.m3OnSurfaceVariant
-                                wrapMode: Text.Wrap
-                                maximumLineCount: notifCard.isExpanded ? 12 : 3
-                                elide: Text.ElideRight
-                                lineHeight: 1.4
-                                visible: text.length > 0
-
-                                Behavior on maximumLineCount {
-                                    NumberAnimation {
-                                        duration: 250; easing.type: Easing.OutCubic
-                                    }
-                                }
-                            }
-
-                            // ── "Show more" hint ──
-                            Text {
-                                Layout.fillWidth: true
-                                visible: {
-                                    const body = modelData.body || ""
-                                    return body.length > 80 && !notifCard.isExpanded
-                                }
-                                text: "tap to expand"
-                                font.pixelSize: 9
-                                font.family: "Inter"
-                                font.letterSpacing: 0.5
-                                color: root.m3OnSurfaceVariant
-                                opacity: 0.4
-                                horizontalAlignment: Text.AlignLeft
-                            }
-
-                            // ── Image preview ──
-                            Item {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 100
-                                Layout.topMargin: 4
-                                visible: modelData.image && modelData.image.length > 0
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    radius: 12
-                                    clip: true
-                                    color: root.m3SurfaceContainer
-
-                                    Image {
-                                        anchors.fill: parent
-                                        anchors.margins: 1
-                                        source: {
-                                            if (!modelData.image) return ""
-                                            if (modelData.image.startsWith("/") ||
-                                                modelData.image.startsWith("file://"))
-                                                return modelData.image
-                                            return "image://icon/" + modelData.image
-                                        }
-                                        fillMode: Image.PreserveAspectCrop
-                                        smooth: true; cache: true; asynchronous: true
-
-                                        layer.enabled: true
-                                        layer.effect: MultiEffect {
-                                            maskEnabled: true
-                                            maskThresholdMin: 0.5
-                                            maskSpreadAtMin: 1.0
-                                            maskSource: ShaderEffectSource {
-                                                sourceItem: Rectangle {
-                                                    width: 1; height: 1; radius: 11
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            // ── Action buttons (M3 tonal pills) ──
-                            Flow {
-                                Layout.fillWidth: true
-                                Layout.topMargin: 6
-                                spacing: 6
-                                visible: modelData.actions && modelData.actions.length > 0
-
-                                Repeater {
-                                    model: notifCard.modelData.actions || []
-
-                                    Rectangle {
-                                        required property var modelData
-                                        required property int index
-
-                                        width: actLabel.width + 22
-                                        height: 28
-                                        radius: 14
-                                        color: actMA.pressed
-                                            ? Qt.rgba(root.m3Primary.r, root.m3Primary.g,
-                                                      root.m3Primary.b, 0.28)
-                                            : actMA.containsMouse
-                                            ? Qt.rgba(root.m3Primary.r, root.m3Primary.g,
-                                                      root.m3Primary.b, 0.18)
-                                            : Qt.rgba(root.m3Primary.r, root.m3Primary.g,
-                                                      root.m3Primary.b, 0.10)
-
-                                        Behavior on color {
-                                            ColorAnimation { duration: 120 }
-                                        }
-
-                                        // Tactile press scale
-                                        scale: actMA.pressed ? 0.94 : 1.0
-                                        Behavior on scale {
-                                            NumberAnimation {
-                                                duration: 100; easing.type: Easing.OutCubic
-                                            }
-                                        }
-
-                                        Text {
-                                            id: actLabel
-                                            anchors.centerIn: parent
-                                            text: parent.modelData.text ||
-                                                  parent.modelData.identifier
-                                            font.pixelSize: 11
-                                            font.weight: Font.Medium
-                                            font.family: "Inter"
-                                            font.letterSpacing: 0.3
-                                            color: root.m3Primary
-                                        }
-
-                                        MouseArea {
-                                            id: actMA
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                parent.modelData.invoke()
-                                                notifCard.dismiss()
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            primaryColor: root.m3Primary
+                            onSurfaceColor: root.m3OnSurface
+                            onSurfaceVariantColor: root.m3OnSurfaceVariant
+                            errorColor: root.m3Error
+                            surfaceContainerHighColor: root.m3SurfaceContainerHigh
                         }
                     }
                 }
